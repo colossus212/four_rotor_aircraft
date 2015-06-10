@@ -47,12 +47,15 @@ Temporary Items
 # DHPing define
 # ========================
 
-.hex
-.lmp
-.sym
-.map
+*.hex
+*.lmp
+*.sym
+*.map
 
 # cubesuite project file
-.rel
-.mtpj
-.mtud
+*.rel
+*.mtpj
+*.mtud
+
+DefaultBuild/four_rotor_aircraft.sym
+
