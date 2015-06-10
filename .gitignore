@@ -47,5 +47,12 @@ Temporary Items
 # DHPing define
 # ========================
 
+.hex
+.lmp
+.sym
+.map
+
 # cubesuite project file
 .rel
+.mtpj
+.mtud
