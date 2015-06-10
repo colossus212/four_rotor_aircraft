@@ -1,3 +1,11 @@
+/************************************************
+* File Name    : IIC.c
+* Version      : 2015.6.10 By DHP
+* Device(s)    : R5F100LE
+* Tool-Chain   : CA78K0R
+* Description  : IIC
+************************************************/
+
 
 #include "IIC.h"
 #include "r_cg_macrodriver.h"
@@ -5,6 +13,8 @@
 #include "r_cg_port.h"
 #include "r_cg_timer.h"
 #include "r_cg_userdefine.h"
+
+
 
 void IIC_Init(void) // initilize P5.0 and P5.1
 {
@@ -15,7 +25,8 @@ void IIC_Init(void) // initilize P5.0 and P5.1
 }
 
 
-//IIC与6050通信开始的标志
+//IIC 6050 communication start
+
 void IIC_Start(void)
 {
 	SDA_OUTMODE();     //set P5.1 output mode
@@ -27,7 +38,8 @@ void IIC_Start(void)
 	IIC_SCL=0U; 
 }
 
-//IIC与6050通信结束的标志 
+//IIC与6050通信结束的标志
+
 void IIC_Stop(void)
 {	SDA_OUTMODE();	//set P5.1 output mode
 	IIC_SCL=0U;
@@ -40,10 +52,10 @@ void IIC_Stop(void)
 
 
 
-uint8_t IIC_Wait_Ack(void)//等待应答 
+uint8_t IIC_Wait_Ack(void)	//wait for ACK
 {
 	uint8_t ucErrTime=0;
-	SDA_INMODE();      //设置SDA为输入模式 
+	SDA_INMODE();      //set P5.0 input mode 
 	IIC_SDA=1;delay_us(1);	   
 	IIC_SCL=1;delay_us(1);	 
 	while(READ_SDA)
@@ -65,7 +77,7 @@ void IIC_Ack(void)
 {
 	IIC_SCL=0U;
 	SDA_OUTMODE();
-	IIC_SDA=0U; //SDA为低，而SCL经历了从低到高再到低的变化过程 
+	IIC_SDA=0U; 	//SDA is low，SCL change form low to high and then low
 	delay_us(2);
 	IIC_SCL=1U;
 	delay_us(2);
@@ -76,7 +88,7 @@ void IIC_NAck(void)
 {
 	IIC_SCL=0U;
 	SDA_OUTMODE();
-	IIC_SDA=1U;  //SDA为高，不应答 
+	IIC_SDA=1U;  	//SDA is high，refuse ACK 
 	delay_us(2);
 	IIC_SCL=1U;
 	delay_us(2);
@@ -94,20 +106,20 @@ uint8_t IIC_Read_Byte(unsigned char ack)
 		delay_us(2);
 		IIC_SCL=1U;
 		receive<<=1; 
-		if(READ_SDA)receive++;	//READ_SDA也即是P5.1
+		if(READ_SDA)receive++;	//READ_SDA is P5.1
 		delay_us(1); 
 	}
 	
     	if (!ack)
-        	IIC_NAck();//拒绝应答 
+        	IIC_NAck();	//refuse ACK 
     	else
-        	IIC_Ack(); //应答  
+        	IIC_Ack();	//ACK 
     	return receive;
 }
 
 
 
-void IIC_Send_Byte(unsigned char txd)//发送数据 
+void IIC_Send_Byte(unsigned char txd)	//send Byte
 {                        
     uint8_t t;
     SDA_OUTMODE();
@@ -129,14 +141,14 @@ void SCL_OUTMODE()	//set P5.0 output mode
 	PM5 &= ~(_01_PMn0_MODE_INPUT);
 }
 
-void SDA_INMODE()//SDA为输入模式
+void SDA_INMODE()	//set P5.0 input mode
 {
-	PM5|=_02_PMn1_MODE_INPUT;//设置P5.1为输入模式
-	PU5|=_02_PUn1_PULLUP_ON;//设置P5.1上拉电阻
-	IIC_SDA=1U;//设5.1位高电平
+	PM5|=_02_PMn1_MODE_INPUT;	//set P5.0 input mode
+	PU5|=_02_PUn1_PULLUP_ON;	//set P5.1 with pullup resistor
+	IIC_SDA=1U;	//set P5.1 as high
 }
 
-void SDA_OUTMODE()  //配置P5.1为输出模式
+void SDA_OUTMODE()  //set P5.0 output mode
 {
 	PM5 &= ~(_02_PMn1_MODE_INPUT);
 	PU5 &= ~(_02_PUn1_PULLUP_ON);
@@ -147,7 +159,7 @@ void delay_us(uint8_t t)
 	uint8_t i;
 	while (t--)
 	{
-		for(i=0;i<13;i++);
+		for(i = 0; i < delay_time_i; i++);
 	}
 }
 
