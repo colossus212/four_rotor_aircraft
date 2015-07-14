@@ -1,4 +1,3 @@
-#include "r_cg_macrodriver.h"
 #ifndef _PID_
 #define _PID_
 
@@ -36,10 +35,6 @@ extern PID_Typedef alt_vel_PID;
 
 void PID_Parameter_Init();
 void PID_Postion_Cal(PID_Typedef * PID,float target,float measure);
-
-
-
-
 
 
 

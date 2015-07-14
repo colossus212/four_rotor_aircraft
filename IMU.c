@@ -18,75 +18,33 @@ struct _angle angle;
 #define KALMAN_Q        0.02
 #define KALMAN_R        6.0000
 
-/*********** 卡尔曼对三个轴加速度进行滤波处理 ***********/
+KalmanFilter_Typedef Kalman_Ax, Kalman_Ay, Kalman_Az;
 
-
-static double KalmanFilter_x(const double ResrcData,double ProcessNiose_Q,double MeasureNoise_R)
+void KalmanFilterParameter_Load()
 {
-   double R = MeasureNoise_R;
-   double Q = ProcessNiose_Q;
-   static double x_last;
-   double x_mid = x_last;
+	Kalman_Ax.Q = Kalman_Ay.Q = Kalman_Az.Q = KALMAN_Q;
+	Kalman_Ax.R = Kalman_Ay.R = Kalman_Az.R = KALMAN_R;
+}
+
+/*********** 卡尔曼滤波***********/
+
+static double KalmanFilter(const double ResrcData, KalmanFilter_Typedef *  Kalman)
+{
+   double x_mid;
    double x_now;
-   static double p_last;
-   double p_mid ;
+   double p_mid;
    double p_now;
    double kg;        
 
-   x_mid=x_last; //x_last=x(k-1|k-1),x_mid=x(k|k-1)
-   p_mid=p_last+Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
-   kg=p_mid/(p_mid+R); //kg为kalman filter 卡尔曼增益，R为噪声
-   x_now=x_mid+kg*(ResrcData-x_mid);//估计出的最优值
+   x_mid = Kalman->x_last;		//x_last = x(k-1|k-1), x_mid = x(k|k-1)
+   p_mid = Kalman->p_last + Kalman->Q;	//p_mid = p(k|k-1), p_last = p(k-1|k-1), Q=噪声
+   kg = p_mid / (p_mid + Kalman->R);			//kg为kalman filter 卡尔曼增益，R为噪声
+   x_now = x_mid + kg * (ResrcData - x_mid);//估计出的最优值
                 
-   p_now=(1-kg)*p_mid;//最优值对应的covariance       
-   p_last = p_now; //更新covariance值
-   x_last = x_now; //更新系统状态值
-   return x_now;                
- }
-static double KalmanFilter_y(const double ResrcData,double ProcessNiose_Q,double MeasureNoise_R)   //对Y轴加速度进行卡尔曼滤波
-{
-   double R = MeasureNoise_R;
-   double Q = ProcessNiose_Q;
-   static double y_last;
-   double y_mid = y_last;
-   double y_now;
-   static double p_last;
-   double p_mid ;
-   double p_now;
-   double kg;        
-
-   y_mid=y_last; //y_last=y(k-1|k-1),y_mid=y(k|k-1)
-   p_mid=p_last+Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
-   kg=p_mid/(p_mid+R); //kg为kalman filter，R为噪声
-   y_now=y_mid+kg*(ResrcData-y_mid);//估计出的最优值
-                
-   p_now=(1-kg)*p_mid;//最优值对应的covariance       
-   p_last = p_now; //更新covariance值
-   y_last = y_now; //更新系统状态值
-   return y_now;                
- }
-
-static double KalmanFilter_z(const double ResrcData,double ProcessNiose_Q,double MeasureNoise_R)
-{
-   double R = MeasureNoise_R;
-   double Q = ProcessNiose_Q;
-   static double z_last;
-   double z_mid = z_last;
-   double z_now;
-   static double p_last;
-   double p_mid ;
-   double p_now;
-   double kg;        
-
-   z_mid=z_last; //z_last=z(k-1|k-1),z_mid=z(k|k-1)
-   p_mid=p_last+Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
-   kg=p_mid/(p_mid+R); //kg为kalman filter，R为噪声
-   z_now=z_mid+kg*(ResrcData-z_mid);//估计出的最优值
-                
-   p_now=(1-kg)*p_mid;//最优值对应的covariance       
-   p_last = p_now; //更新covariance值
-   z_last = z_now; //更新系统状态值
-   return z_now;                
+   p_now = (1 - kg) * p_mid;//最优值对应的covariance       
+   Kalman->p_last = p_now; //更新covariance值
+   Kalman->x_last = x_now; //更新系统状态值
+   return x_now;          
  }
 
 //   快速求平方根倒数
@@ -162,9 +120,10 @@ void Prepare_Data(void)
 	MPU6050_Read_RawData();         //读取6050
 	Multiple_Read_HMC5883L();   //读取地磁数据
 	
-	MPU6050_data.Ax = KalmanFilter_x(MPU6050_data.Ax, KALMAN_Q, KALMAN_R);  // ACC X轴卡尔曼滤波
-	MPU6050_data.Ay = KalmanFilter_y(MPU6050_data.Ay, KALMAN_Q, KALMAN_R);  // ACC Y轴卡尔曼滤波
-	MPU6050_data.Az = KalmanFilter_z(MPU6050_data.Az, KALMAN_Q, KALMAN_R);  // ACC Z轴卡尔曼滤波
+	KalmanFilterParameter_Load();
+	MPU6050_data.Ax = KalmanFilter(MPU6050_data.Ax, & Kalman_Ax);
+	MPU6050_data.Ay = KalmanFilter(MPU6050_data.Ay, & Kalman_Ay);
+	MPU6050_data.Az = KalmanFilter(MPU6050_data.Az, & Kalman_Az);
 	
 }
 
@@ -187,7 +146,7 @@ void Get_Attitude()
 {
 	Prepare_Data();
 	
-	IMUupdate(	MPU6050_data.Gx, MPU6050_data.Gy, MPU6050_data.Gz, MPU6050_data.Ax, MPU6050_data.Ay, MPU6050_data.Az);	
+	IMUupdate(	MPU6050_data.Gx * AtR, MPU6050_data.Gy * AtR, MPU6050_data.Gz * AtR, MPU6050_data.Ax, MPU6050_data.Ay, MPU6050_data.Az);	
 }
 
 float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
@@ -276,7 +235,7 @@ void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
 
 }
 
-/**********************************************
+/********************** 直接用欧拉角解算姿态 含卡夫曼滤波************************
 
 float t=0.025;	//滤波器采样时间
 float r_xz=0.25,r_yx=0.25,r_yz=0.25;

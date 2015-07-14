@@ -6,7 +6,7 @@
 * Tool-Chain	: CA78K0R
 * Description	: MPU6050
 * API		: void MPU6050_Init(void)	初始化 MPU6050 的寄存器,计算零偏，并开启采样时钟
-		  void MPU6050_Read_RawData();  获得 MPU6050 的六个测量值，已经转换单位并减去零偏
+		  void MPU6050_Read_RawData();  获得 MPU6050 的六个测量值，已经转换单位并减去零偏 输出角度值
 		  
 		  float Get_MPU6050_Ax();
 		  float Get_MPU6050_Ay();
@@ -250,29 +250,28 @@ void MPU6050_getDeviceID(uint8_t * Add)
 void MPU6050_Read_RawData()
 {
 	uint8_t buf[14];
-	//MPU6050_data_old.Ax = MPU6050_data.Ax;
+	//MPU6050_data_old.Ax = MPU6050_data.Ax; etc
 	
 	IIC_Read_Bytes(MPU6050_Address, MPU6050_RA_ACCEL_XOUT_H, 14, buf);
 	
 	if(MPU6050_Offset_Done == 0)
 	{
-		MPU6050_data.Ax = ((float)(( ((int16_t)buf[0]) <<8) + buf[1])) / AcceRatio; 
-		MPU6050_data.Ay = ((float)(( ((int16_t)buf[2]) <<8) + buf[3])) / AcceRatio; 
-		MPU6050_data.Az = ((float)(( ((int16_t)buf[4]) <<8) + buf[5])) / AcceRatio; 
-		MPU6050_data.Tt = ((float)(( ((int16_t)buf[6]) <<8) + buf[7]));
-		MPU6050_data.Gx = ((float)( (( ((int16_t)buf[8]) <<8) + buf[9])) / GyroRatio ) * pi / 180; 
-		MPU6050_data.Gy = ((float)( (( ((int16_t)buf[10]) <<8) + buf[11])) / GyroRatio ) * pi / 180; 
-		MPU6050_data.Gz = ((float)( (( ((int16_t)buf[12]) <<8) + buf[13])) / GyroRatio ) * pi / 180;
+		MPU6050_data.Ax = ( (float) (( ((int16_t)buf[0]) <<8) + buf[1]) ) / AcceRatio; 
+		MPU6050_data.Ay = ( (float) (( ((int16_t)buf[2]) <<8) + buf[3]) ) / AcceRatio; 
+		MPU6050_data.Az = ( (float) (( ((int16_t)buf[4]) <<8) + buf[5]) ) / AcceRatio; 
+		MPU6050_data.Gx = ( (float) ( (( ((int16_t)buf[8]) <<8) + buf[9])) ) / GyroRatio ; 
+		MPU6050_data.Gy = ( (float) ( (( ((int16_t)buf[10]) <<8) + buf[11])) ) / GyroRatio ; 
+		MPU6050_data.Gz = ( (float) ( (( ((int16_t)buf[12]) <<8) + buf[13])) ) / GyroRatio ;
 	}
 		else
 		{
-			MPU6050_data.Ax = ((float)(( ((int16_t)buf[0]) <<8) + buf[1])) / AcceRatio - Ax_Offset; 
-			MPU6050_data.Ay = ((float)(( ((int16_t)buf[2]) <<8) + buf[3])) / AcceRatio - Ay_Offset; 
-			MPU6050_data.Az = ((float)(( ((int16_t)buf[4]) <<8) + buf[5])) / AcceRatio - Az_Offset; 
-			MPU6050_data.Tt = (float)(( ((int16_t)buf[6]) <<8) + buf[7]) / TemperatureRatio - TemperatureOffset;
-			MPU6050_data.Gx = ((float)( (( ((int16_t)buf[8]) <<8) + buf[9])) / GyroRatio ) * pi / 180 - Gx_Offset; 
-			MPU6050_data.Gy = ((float)( (( ((int16_t)buf[10]) <<8) + buf[11])) / GyroRatio ) * pi / 180 - Gy_Offset; 
-			MPU6050_data.Gz = ((float)( (( ((int16_t)buf[12]) <<8) + buf[13])) / GyroRatio ) * pi / 180 - Gz_Offset;			
+			MPU6050_data.Ax = ( (float) (( ((int16_t)buf[0]) <<8) + buf[1]) ) / AcceRatio - Ax_Offset; 
+			MPU6050_data.Ay = ( (float) (( ((int16_t)buf[2]) <<8) + buf[3]) ) / AcceRatio - Ay_Offset; 
+			MPU6050_data.Az = ( (float) (( ((int16_t)buf[4]) <<8) + buf[5]) ) / AcceRatio - Az_Offset; 
+			MPU6050_data.Tt = ( (float) (( ((int16_t)buf[6]) <<8) + buf[7]) ) / TemperatureRatio - TemperatureOffset;
+			MPU6050_data.Gx = ( (float) ( (( ((int16_t)buf[8]) <<8) + buf[9])) ) / GyroRatio - Gx_Offset; 
+			MPU6050_data.Gy = ( (float) ( (( ((int16_t)buf[10]) <<8) + buf[11])) ) / GyroRatio  - Gy_Offset; 
+			MPU6050_data.Gz = ( (float) ( (( ((int16_t)buf[12]) <<8) + buf[13])) ) / GyroRatio  - Gz_Offset;			
 		}
 	
 }
