@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements device driver for TAU module.
-* Creation Date: 2015/6/7
+* Creation Date: 2015/7/14
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -40,6 +40,7 @@ Pragma directive
 #pragma interrupt INTTM03 r_tau0_channel3_interrupt
 #pragma interrupt INTTM04 r_tau0_channel4_interrupt
 #pragma interrupt INTTM05 r_tau0_channel5_interrupt
+#pragma interrupt INTTM06 r_tau0_channel6_interrupt
 /* Start user code for pragma. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
 
@@ -49,12 +50,15 @@ Includes
 #include "r_cg_macrodriver.h"
 #include "r_cg_timer.h"
 /* Start user code for include. Do not edit comment generated here */
+#include "include.h"
 /* End user code. Do not edit comment generated here */
 #include "r_cg_userdefine.h"
 
 /***********************************************************************************************************************
 Global variables and functions
 ***********************************************************************************************************************/
+/* For TAU0_ch6 pulse measurement */
+volatile uint32_t g_tau0_ch6_width = 0U;
 /* Start user code for global. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
 
@@ -126,6 +130,40 @@ __interrupt static void r_tau0_channel4_interrupt(void)
 ***********************************************************************************************************************/
 __interrupt static void r_tau0_channel5_interrupt(void)
 {
+    /* Start user code. Do not edit comment generated here */
+
+
+	//这段代码会以comment的形式放在control.h里作为备份
+	//中断控制：
+	static uint8_t i;
+	if(i == 6)
+	{
+		//Get_Height();
+		i = 0;
+	}
+	Get_Attitude();
+	i++；	
+
+    /* End user code. Do not edit comment generated here */
+}
+
+/***********************************************************************************************************************
+* Function Name: r_tau0_channel6_interrupt
+* Description  : This function is INTTM06 interrupt service routine.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+__interrupt static void r_tau0_channel6_interrupt(void)
+{
+    if ((TSR06 & _0001_TAU_OVERFLOW_OCCURS) == 1U)    /* overflow occurs */
+    {            
+        g_tau0_ch6_width = (uint32_t)(TDR06 + 1U) + 0x10000U;
+    }
+    else
+    {
+        g_tau0_ch6_width = (uint32_t)(TDR06 + 1U);
+    }
+
     /* Start user code. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
 }

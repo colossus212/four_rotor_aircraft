@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements device driver for TAU module.
-* Creation Date: 2015/6/7
+* Creation Date: 2015/7/14
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -49,6 +49,8 @@ Includes
 /***********************************************************************************************************************
 Global variables and functions
 ***********************************************************************************************************************/
+/* For TAU0_ch6 pulse measurement */
+extern volatile uint32_t g_tau0_ch6_width;
 /* Start user code for global. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
 
@@ -61,7 +63,7 @@ Global variables and functions
 void R_TAU0_Create(void)
 {
     TAU0EN = 1U;    /* supplies input clock */
-    TPS0 = _0000_TAU_CKM0_FCLK_0 | _0000_TAU_CKM1_FCLK_0 | _0000_TAU_CKM2_FCLK_1 | _0000_TAU_CKM3_FCLK_8;
+    TPS0 = _0002_TAU_CKM0_FCLK_2 | _0040_TAU_CKM1_FCLK_4 | _0000_TAU_CKM2_FCLK_1 | _0000_TAU_CKM3_FCLK_8;
     /* Stop all channels */
     TT0 = _0001_TAU_CH0_STOP_TRG_ON | _0002_TAU_CH1_STOP_TRG_ON | _0004_TAU_CH2_STOP_TRG_ON |
           _0008_TAU_CH3_STOP_TRG_ON | _0010_TAU_CH4_STOP_TRG_ON | _0020_TAU_CH5_STOP_TRG_ON |
@@ -112,43 +114,46 @@ void R_TAU0_Create(void)
     /* Set INTTM04 low priority */
     TMPR104 = 1U;
     TMPR004 = 1U;
-    /* Set INTTM05 low priority */
-    TMPR105 = 1U;
-    TMPR005 = 1U;
+    /* Set INTTM05 high priority */
+    TMPR105 = 0U;
+    TMPR005 = 0U;
+    /* Set INTTM06 low priority */
+    TMPR106 = 1U;
+    TMPR006 = 1U;
     /* Channel 0 is used as master channel for PWM output function */
-    TMR00 = _0000_TAU_CLOCK_SELECT_CKM0 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_TRIGGER_SOFTWARE |
+    TMR00 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_TRIGGER_SOFTWARE |
             _0001_TAU_MODE_PWM_MASTER;
-    TDR00 = _0C7F_TAU_TDR00_VALUE;
+    TDR00 = _9C3F_TAU_TDR00_VALUE;
     TO0 &= ~_0001_TAU_CH0_OUTPUT_VALUE_1;
     TOE0 &= ~_0001_TAU_CH0_OUTPUT_ENABLE;
     /* Channel 1 is used as slave channel for PWM output function */
-    TMR01 = _0000_TAU_CLOCK_SELECT_CKM0 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
+    TMR01 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
             _0400_TAU_TRIGGER_MASTER_INT | _0009_TAU_MODE_PWM_SLAVE;
-    TDR01 = _0640_TAU_TDR01_VALUE;
+    TDR01 = _4E20_TAU_TDR01_VALUE;
     TOM0 |= _0002_TAU_CH1_OUTPUT_COMBIN;
     TOL0 &= ~_0002_TAU_CH1_OUTPUT_LEVEL_L;
     TO0 &= ~_0002_TAU_CH1_OUTPUT_VALUE_1;
     TOE0 |= _0002_TAU_CH1_OUTPUT_ENABLE;
     /* Channel 2 is used as slave channel for PWM output function */
-    TMR02 = _0000_TAU_CLOCK_SELECT_CKM0 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
+    TMR02 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
             _0400_TAU_TRIGGER_MASTER_INT | _0009_TAU_MODE_PWM_SLAVE;
-    TDR02 = _0640_TAU_TDR02_VALUE;
+    TDR02 = _4E20_TAU_TDR02_VALUE;
     TOM0 |= _0004_TAU_CH2_OUTPUT_COMBIN;
     TOL0 &= ~_0004_TAU_CH2_OUTPUT_LEVEL_L;
     TO0 &= ~_0004_TAU_CH2_OUTPUT_VALUE_1;
     TOE0 |= _0004_TAU_CH2_OUTPUT_ENABLE;
     /* Channel 3 is used as slave channel for PWM output function */
-    TMR03 = _0000_TAU_CLOCK_SELECT_CKM0 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
+    TMR03 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
             _0400_TAU_TRIGGER_MASTER_INT | _0009_TAU_MODE_PWM_SLAVE;
-    TDR03 = _0640_TAU_TDR03_VALUE;
+    TDR03 = _4E20_TAU_TDR03_VALUE;
     TOM0 |= _0008_TAU_CH3_OUTPUT_COMBIN;
     TOL0 &= ~_0008_TAU_CH3_OUTPUT_LEVEL_L;
     TO0 &= ~_0008_TAU_CH3_OUTPUT_VALUE_1;
     TOE0 |= _0008_TAU_CH3_OUTPUT_ENABLE;
     /* Channel 4 is used as slave channel for PWM output function */
-    TMR04 = _0000_TAU_CLOCK_SELECT_CKM0 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
+    TMR04 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
             _0400_TAU_TRIGGER_MASTER_INT | _0009_TAU_MODE_PWM_SLAVE;
-    TDR04 = _0640_TAU_TDR04_VALUE;
+    TDR04 = _4E20_TAU_TDR04_VALUE;
     TOM0 |= _0010_TAU_CH4_OUTPUT_COMBIN;
     TOL0 &= ~_0010_TAU_CH4_OUTPUT_LEVEL_L;
     TO0 &= ~_0010_TAU_CH4_OUTPUT_VALUE_1;
@@ -156,11 +161,19 @@ void R_TAU0_Create(void)
     /* Channel 5 used as interval timer */
     TMR05 = _0000_TAU_CLOCK_SELECT_CKM0 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
             _0000_TAU_TRIGGER_SOFTWARE | _0000_TAU_MODE_INTERVAL_TIMER | _0000_TAU_START_INT_UNUSED;
-    TDR05 = _031F_TAU_TDR05_VALUE;
+    TDR05 = _9C3F_TAU_TDR05_VALUE;
     TOM0 &= ~_0020_TAU_CH5_OUTPUT_COMBIN;
     TOL0 &= ~_0020_TAU_CH5_OUTPUT_LEVEL_L;
     TO0 &= ~_0020_TAU_CH5_OUTPUT_VALUE_1;
     TOE0 &= ~_0020_TAU_CH5_OUTPUT_ENABLE;
+    /* Channel 6 is used to measure input pulse low-/high-width */
+    TMR06 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_COMBINATION_SLAVE |
+            _0200_TAU_TRIGGER_TIMN_BOTH | _00C0_TAU_TIMN_EDGE_BOTH_HIGH | _000C_TAU_MODE_HIGHLOW_MEASURE;
+    TOM0 &= ~_0040_TAU_CH6_OUTPUT_COMBIN;
+    TOL0 &= ~_0040_TAU_CH6_OUTPUT_LEVEL_L;
+    TO0 &= ~_0040_TAU_CH6_OUTPUT_VALUE_1;
+    TOE0 &= ~_0040_TAU_CH6_OUTPUT_ENABLE;
+    NFEN1 |= _40_TAU_CH6_NOISE_ON;    /* enable using noise filter of TI06 pin input signal */
     /* Set TO01 pin */
     P1 &= 0xBFU;
     PM1 &= 0xBFU;
@@ -173,6 +186,8 @@ void R_TAU0_Create(void)
     /* Set TO04 pin */
     P4 &= 0xFBU;
     PM4 &= 0xFBU;
+    /* Set TI06 pin */
+    PM0 |= 0x40U;
 }
 
 /***********************************************************************************************************************
@@ -253,6 +268,46 @@ void R_TAU0_Channel5_Stop(void)
     /* Mask channel 5 interrupt */
     TMMK05 = 1U;    /* disable INTTM05 interrupt */
     TMIF05 = 0U;    /* clear INTTM05 interrupt flag */
+}
+
+/***********************************************************************************************************************
+* Function Name: R_TAU0_Channel6_Start
+* Description  : This function starts TAU0 channel 6 counter.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+void R_TAU0_Channel6_Start(void)
+{
+    TMIF06 = 0U;    /* clear INTTM06 interrupt flag */
+    TMMK06 = 0U;    /* enable INTTM06 interrupt */
+    TS0 |= _0040_TAU_CH6_START_TRG_ON;
+}
+
+/***********************************************************************************************************************
+* Function Name: R_TAU0_Channel6_Stop
+* Description  : This function stops TAU0 channel 6 counter.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+void R_TAU0_Channel6_Stop(void)
+{
+    TT0 |= _0040_TAU_CH6_STOP_TRG_ON;
+    /* Mask channel 6 interrupt */
+    TMMK06 = 1U;    /* disable INTTM06 interrupt */
+    TMIF06 = 0U;    /* clear INTTM06 interrupt flag */
+}
+
+/***********************************************************************************************************************
+* Function Name: R_TAU0_Channel6_Get_PulseWidth
+* Description  : This function measures TAU0 channel 6 input pulse width.
+* Arguments    : width -
+*                    the address where to write the input pulse width
+* Return Value : None
+***********************************************************************************************************************/
+void R_TAU0_Channel6_Get_PulseWidth(uint32_t * const width)
+{
+    /* For channel 6 pulse measurement */
+    *width = g_tau0_ch6_width;
 }
 
 /* Start user code for adding. Do not edit comment generated here */

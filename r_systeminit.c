@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements system initializing function.
-* Creation Date: 2015/6/7
+* Creation Date: 2015/7/14
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -42,7 +42,6 @@ Includes
 ***********************************************************************************************************************/
 #include "r_cg_macrodriver.h"
 #include "r_cg_cgc.h"
-#include "r_cg_port.h"
 #include "r_cg_timer.h"
 /* Start user code for include. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
@@ -64,7 +63,6 @@ void R_Systeminit(void)
 {
     PIOR = 0x00U;
     R_CGC_Get_ResetSource();
-    R_PORT_Create();
     R_CGC_Create();
     R_TAU0_Create();
     CRC0CTL = 0x00U;

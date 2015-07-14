@@ -1,20 +1,48 @@
 /************************************************
-* File Name    : IIC.c
-* Version      : 2015.6.10 By DHP
-* Device(s)    : R5F100LE
-* Tool-Chain   : CA78K0R
-* Description  : IIC
+* File Name	: IIC.c
+* Version	: 2015.6.10 By DHP
+* Device(s)	: R5F100LE
+* Tool-Chain	: CA78K0R
+* Description	: IIC
+* API		: void IIC_Init(void)
+		  uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
+		  uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
+		  uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
+		  uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data)
+		 		
 ************************************************/
 
 
-#include "IIC.h"
-#include "r_cg_macrodriver.h"
-#include "r_cg_cgc.h"
-#include "r_cg_port.h"
-#include "r_cg_timer.h"
-#include "r_cg_userdefine.h"
+#include "include.h"
+
+#define	IIC_SDA	P5.1
+#define IIC_SCL P5.0
+#define READ_SDA P5.1
+
+void SCL_OUTMODE()	//set P5.0 output mode
+{
+	PM5 &= ~(_01_PMn0_MODE_INPUT);
+}
+
+void SDA_INMODE()	//set P5.0 input mode
+{
+	PM5|=_02_PMn1_MODE_INPUT;	//set P5.0 input mode
+	PU5|=_02_PUn1_PULLUP_ON;	//set P5.1 with pullup resistor
+	IIC_SDA=1U;	//set P5.1 as high
+}
+
+void SDA_OUTMODE()  //set P5.0 output mode
+{
+	PM5 &= ~(_02_PMn1_MODE_INPUT);
+	PU5 &= ~(_02_PUn1_PULLUP_ON);
+}
 
 
+
+/**************************实现函数********************************************
+*函数原型:		void IIC_Init(void)
+*功　　能:		初始化I2C对应的接口引脚。
+*******************************************************************************/
 
 void IIC_Init(void) // initilize P5.0 and P5.1
 {
@@ -25,7 +53,10 @@ void IIC_Init(void) // initilize P5.0 and P5.1
 }
 
 
-//IIC 6050 communication start
+/**************************实现函数********************************************
+*函数原型:		void IIC_Start(void)
+*功　　能:		IIC 6050 communication start
+*******************************************************************************/
 
 void IIC_Start(void)
 {
@@ -38,19 +69,29 @@ void IIC_Start(void)
 	IIC_SCL=0U; 
 }
 
-//IIC与6050通信结束的标志
+
+/**************************实现函数********************************************
+*函数原型:		void IIC_Stop(void)
+*功　　能:	    //产生IIC停止信号
+*******************************************************************************/
 
 void IIC_Stop(void)
-{	SDA_OUTMODE();	//set P5.1 output mode
+{
+	SDA_OUTMODE();	//set P5.1 output mode
 	IIC_SCL=0U;
 	IIC_SDA=0U;	//STOP : when CLK is high DATA change form low to high
  	delay_us(4);
 	IIC_SCL=1U;
+	IIC_SDA=1U;
 	delay_us(4);
-	IIC_SDA=1U;							   	
 }
 
-
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Wait_Ack(void)
+*功　　能:	    等待应答信号到来 
+//返回值：1，接收应答失败
+//        0，接收应答成功
+*******************************************************************************/
 
 uint8_t IIC_Wait_Ack(void)	//wait for ACK
 {
@@ -71,7 +112,10 @@ uint8_t IIC_Wait_Ack(void)	//wait for ACK
 	return 0;  
 } 
 
-
+/**************************实现函数********************************************
+*函数原型:		void IIC_Ack(void)
+*功　　能:	    产生ACK应答
+*******************************************************************************/
 
 void IIC_Ack(void)
 {
@@ -83,29 +127,36 @@ void IIC_Ack(void)
 	delay_us(2);
 	IIC_SCL=0U;
 }
-		    
+
+/**************************实现函数********************************************
+*函数原型:		void IIC_NAck(void)
+*功　　能:	    产生NACK应答
+*******************************************************************************/
 void IIC_NAck(void)
 {
-	IIC_SCL=0U;
+	IIC_SCL = 0U;
 	SDA_OUTMODE();
-	IIC_SDA=1U;  	//SDA is high，refuse ACK 
+	IIC_SDA = 1U;  	//SDA is high，refuse ACK 
 	delay_us(2);
-	IIC_SCL=1U;
+	IIC_SCL = 1U;
 	delay_us(2);
-	IIC_SCL=0U;
+	IIC_SCL = 0U;
 }
 
-
-uint8_t IIC_Read_Byte(unsigned char ack)
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Receive_Byte(unsigned char ack)
+*功　　能:	    //读1个字节，ack=1时，发送ACK，ack=0，发送nACK 
+*******************************************************************************/ 
+uint8_t IIC_Receive_Byte(unsigned char ack)
 {
-	unsigned char i,receive=0;
+	unsigned char i,receive = 0;
 	SDA_INMODE();
-  	for(i=0;i<8;i++ )
+  	for(i = 0; i < 8; i++ )
 	{
-		IIC_SCL=0U;
+		IIC_SCL = 0U;
 		delay_us(2);
-		IIC_SCL=1U;
-		receive<<=1; 
+		IIC_SCL = 1U;
+		receive <<= 1; 
 		if(READ_SDA)receive++;	//READ_SDA is P5.1
 		delay_us(1); 
 	}
@@ -117,56 +168,134 @@ uint8_t IIC_Read_Byte(unsigned char ack)
     	return receive;
 }
 
-
+/**************************实现函数********************************************
+*函数原型:		void IIC_Send_Byte(unsigned char txd)
+*功　　能:	    IIC发送一个字节
+*******************************************************************************/
 
 void IIC_Send_Byte(unsigned char txd)	//send Byte
 {                        
     uint8_t t;
     SDA_OUTMODE();
     IIC_SCL=0U;
-    for(t=0;t<8;t++)
+    for(t = 0; t < 8; t++)
     {
-	IIC_SDA=(txd&0x80)>>7;
-	txd<<=1;	  
+	IIC_SDA = (txd & 0x80) >> 7;
+	txd <<= 1;	  
 	delay_us(2);   
-	IIC_SCL=1U;
+	IIC_SCL = 1U;
 	delay_us(2); 
-	IIC_SCL=0U;	
+	IIC_SCL = 0U;	
 	delay_us(2);
     }	 
 }
 
-void SCL_OUTMODE()	//set P5.0 output mode
-{
-	PM5 &= ~(_01_PMn0_MODE_INPUT);
-}
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
+*功　　能:	    读取指定设备 指定寄存器的 length个值
+输入		dev  目标设备地址
+		reg	  寄存器地址
+		length 要读的字节数
+		*data  读出的数据将要存放的指针
+返回   读出来的字节数量
+*******************************************************************************/ 
 
-void SDA_INMODE()	//set P5.0 input mode
+uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
 {
-	PM5|=_02_PMn1_MODE_INPUT;	//set P5.0 input mode
-	PU5|=_02_PUn1_PULLUP_ON;	//set P5.1 with pullup resistor
-	IIC_SDA=1U;	//set P5.1 as high
-}
-
-void SDA_OUTMODE()  //set P5.0 output mode
-{
-	PM5 &= ~(_02_PMn1_MODE_INPUT);
-	PU5 &= ~(_02_PUn1_PULLUP_ON);
-}
-
-void delay_us(uint8_t t)
-{
-	uint8_t i;
-	while (t--)
+    	uint8_t count = 0;
+	uint8_t temp;
+	IIC_Start();
+	IIC_Send_Byte(dev);	   //发送写命令
+	IIC_Wait_Ack();
+	IIC_Send_Byte(reg);   //发送地址
+	IIC_Wait_Ack();	  
+	IIC_Start();
+	IIC_Send_Byte(dev + 1);  //进入接收模式	
+	IIC_Wait_Ack();
+	
+    	for(count = 0; count < length; count++)
 	{
-		for(i = 0; i < delay_time_i; i++);
+		 
+		 if(count != (length - 1) )
+		 	temp = IIC_Receive_Byte(1);  //带ACK的读数据
+		 	else  
+			temp = IIC_Receive_Byte(0);	 //最后一个字节NACK
+
+		data[count] = temp;
 	}
+	IIC_Stop();//产生一个停止条件
+	return count;
 }
 
-void delay_ms(uint8_t t)
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
+*功　　能:	    将多个字节写入指定设备 指定寄存器
+输入		dev  目标设备地址
+		reg	  寄存器地址
+		length 要写的字节数
+		*data  将要写的数据的首地址
+返回   返回是否成功
+*******************************************************************************/ 
+uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
 {
-	while (t--)
+  
+ 	uint8_t count = 0;
+	IIC_Start();
+	IIC_Send_Byte(dev);	   //发送写命令
+	IIC_Wait_Ack();
+	IIC_Send_Byte(reg);   //发送地址
+	IIC_Wait_Ack();	  
+	for(count = 0; count < length; count++)
 	{
-		delay_us(1000);
-	}
+		IIC_Send_Byte(data[count]); 
+		IIC_Wait_Ack(); 
+	 }
+	IIC_Stop();//产生一个停止条件
+
+	return 1; //status == 0;
+}
+
+
+
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
+*功　　能:	    写入指定设备 指定寄存器一个字节
+输入		dev  目标设备地址
+		reg	   寄存器地址
+		data  将要写入的字节
+返回   1
+*******************************************************************************/ 
+uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
+{
+	return IIC_Write_Bytes(dev, reg, 1, &data);
+}
+
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data)
+*功　　能:	    读 修改 写 指定设备 指定寄存器一个字节 中的多个位
+输入	dev  目标设备地址
+		reg	   寄存器地址
+		bitStart  目标字节的起始位
+		length   位长度
+		data    存放改变目标字节位的值
+返回   	成功 为1 
+ 		失败为0
+*******************************************************************************/ 
+uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data)
+{
+
+    uint8_t b;
+    if (IIC_Read_Bytes(dev, reg, 1, &b) != 0) 
+    {
+        uint8_t mask = (0xFF << (bitStart + 1)) | 0xFF >> ((8 - bitStart) + length - 1);
+        data <<= (8 - length);
+        data >>= (7 - bitStart);
+        b &= mask;
+        b |= data;
+        return IIC_Write_Byte(dev, reg, b);
+    }
+	else 
+	{
+        	return 0;
+    	}
 }

@@ -1,175 +1,302 @@
 
-#include "MPU_6050.h"
-#include "IIC.h"
-#include "r_cg_macrodriver.h"
-#include "r_cg_cgc.h"
-#include "r_cg_port.h"
-#include "r_cg_timer.h"
-#include "r_cg_userdefine.h"
+/************************************************
+* File Name	: MPU_6050.c
+* Version	: 2015.6.10 By DHP
+* Device(s)	: R5F100LE
+* Tool-Chain	: CA78K0R
+* Description	: MPU6050
+* API		: void MPU6050_Init(void)	初始化 MPU6050 的寄存器,计算零偏，并开启采样时钟
+		  void MPU6050_Read_RawData()  获得 MPU6050 的六个测量值，已经转换单位并减去零偏
+		  
+		  float Get_MPU6050_Ax();
+		  float Get_MPU6050_Ay();
+		  float Get_MPU6050_Az();
+		  
+		  float Get_MPU6050_Gx();
+		  float Get_MPU6050_Gy();
+		  float Get_MPU6050_Gz();
+		  
+		  float Get_MPU6050_Ax_old();
+		  float Get_MPU6050_Ay_old();
+		  float Get_MPU6050_Az_old();
+		  
+		  float Get_MPU6050_Gx_old();
+		  float Get_MPU6050_Gy_old();
+		  float Get_MPU6050_Gz_old();
+		  
+		  
+		  
+		  extern MPU6050_Struct MPU6050_data, MPU6050_data_old;
+		  
+		  //void MPU6050_RawData_Average() 获得 MPU6050 三个加速度 8 次，并平均
+		  
+************************************************/
 
+#include "include.h"
 
+MPU6050_Struct MPU6050_data;
 
 const float pi = 3.1415926;
-float r_xz=0.25,r_yx=0.25,r_yz=0.25;
-float q_xz=0.0025,q_yx=0.0025,q_yz=0.0025;
-float Ax,Ay,Az,Gx,Gy,Gz;                       //The raw data of accelerometers and gyroscope
-float k_xz=0,k_yx=0,k_yz=0;
-float Aax,Aay;
-float oAax,oAay,oGx,oGy,oGz;	//偏置
-float p_xz=1,p_yx=1,p_yz=1;
-float aax,aay,accx,accy,accz;
-float AcceRatio = 16384.0;   
-float GyroRatio = 131.0;
-float t=0.025;	
-uint8_t sample_times=200;
-MPU_TypeDef data,*mpu_ptr=&data;
+
+float AcceRatio;   
+float GyroRatio;
+
+uint8_t sample_times = 200;	// for Get_Offset
+float Ax_Offset, Ay_Offset, Gx_Offset, Gy_Offset, Gz_Offset;	//零偏
+uint8_t MPU6050_Offset_Done = 0;
+
+float Get_MPU6050_Ax()
+{
+	return MPU6050_data.Ax;
+}
+
+float Get_MPU6050_Ay()
+{
+	return MPU6050_data.Ay;
+}
+
+float Get_MPU6050_Az()
+{
+	return MPU6050_data.Az;
+}
+
+float Get_MPU6050_Gx()
+{
+	return MPU6050_data.Gx;
+}
+
+float Get_MPU6050_Gy()
+{
+	return MPU6050_data.Gy;
+}
+
+float Get_MPU6050_Gz()
+{
+	return MPU6050_data.Gz;
+}
+
+/*
+float Get_MPU6050_Ax_old()
+{
+	return MPU6050_data_old.Ax;
+}
+
+float Get_MPU6050_Ay_old()
+{
+	return MPU6050_data_old.Ay;
+}
+
+float Get_MPU6050_Az_old()
+{
+	return MPU6050_data_old.Az;
+}
+
+float Get_MPU6050_Gx_old()
+{
+	return MPU6050_data_old.Gx;
+}
+
+float Get_MPU6050_Gy_old()
+{
+	return MPU6050_data_old.Gy;
+}
+
+float Get_MPU6050_Gz_old()
+{
+	return MPU6050_data_old.Gz;
+}
+*/
+
+
+float Get_MPU6050_Gx_A()
+{
+	return MPU6050_data.Gx * pi / 180;
+}
+float Get_MPU6050_Gy_A()
+{
+	return MPU6050_data.Gy * pi / 180;
+}
+float Get_MPU6050_Gz_A()
+{
+	return MPU6050_data.Gz * pi / 180;
+}
 
 
 
-void MPU6050_start(){//从这里开始 
-	uint8_t i;
-	Ax=0;Ay=0;Az=0;
-	Gx=0;Gy=0;Gz=0;//加速度计陀螺仪原始数据 
+void MPU6050_Get_Offset()
+{	
 	
-	MPU6050_Init(); 
-	for (i=0;i<sample_times;i++){
-		MPU6050_RD_XYZ(mpu_ptr);//读取AX,AY,AZ、绕轴角速度 
-		Ax+=mpu_ptr->Ax;
-		Ay+=mpu_ptr->Ay;   //这六个量的定义放在一个结构体里面了，在userdefine里面 
-		Az+=mpu_ptr->Az;
-		Gx+=mpu_ptr->Gx;
-		Gy+=mpu_ptr->Gy;		
-		Gz+=mpu_ptr->Gz;
-	}	
-	oAax = ( atan(Ax / Az)*180 ) / pi;
-  	oAay = ( atan(Ay / Az)*180 ) / pi;
-	oGx  =Gx/sample_times/GyroRatio;
-	oGy  =Gy/sample_times/GyroRatio;
-	oGz  =Gz/sample_times/GyroRatio;
-	R_TAU0_Channel5_Start();
+	uint8_t i;
+	float Ax, Ay, Az, Gx, Gy, Gz;		//The raw data of accelerometers and gyroscope
+	Ax=0;Ay=0;Az=0;
+	Gx=0;Gy=0;Gz=0;		//initialize variables as the raw data of accelerometers and gyroscope
+	
+	
+	for (i=0;i<sample_times;i++)
+	{
+		MPU6050_Read_RawData();//读取AX,AY,AZ、绕轴角速度 
+		Ax += MPU6050_data.Ax;
+		Ay += MPU6050_data.Ay;   //这六个量的定义放在一个结构体里面
+		Az += MPU6050_data.Az;
+		Gx += MPU6050_data.Gx;
+		Gy += MPU6050_data.Gy;		
+		Gz += MPU6050_data.Gz;
+	}
+	
+	Ax_Offset = Ax;
+	Ay_Offset = Ay;
+	Gx_Offset = Gx / sample_times;
+	Gy_Offset = Gy / sample_times;
+	Gz_Offset = Gz / sample_times;
+	
+	MPU6050_Offset_Done = 1;
+	
+	/**************************************
+	AngleAx_Offset = ( atan(Ax / Az)*180 ) / pi;
+  	AngleAy_Offset = ( atan(Ay / Az)*180 ) / pi;
+	AngleGx_Offset = Gx / sample_times;
+	AngleGy_Offset = Gy / sample_times;
+	AngleGz_Offset = Gz / sample_times;
+	**************************************/
+	
 }
 
 
-
-void get_MPUdata()
+/**************************实现函数********************************************
+*函数原型:		void MPU6050_Set_Accel_Range(uint8_t range)
+*功　　能:	    设置  MPU6050 加速度计的最大量程 
+* AFS_SEL=0    ±2	g	16,384    LSB/g       
+* AFS_SEL=1    ±4	g	8,192     LSB/g 
+* AFS_SEL=2    ±8	g	4,096     LSB/g
+* AFS_SEL=3    ±16	g	2,048     LSB/g 
+*******************************************************************************/
+void MPU6050_Set_Accel_Range(uint8_t range)
 {
-	MPU6050_RD_XYZ(mpu_ptr);
-	accx=(float)mpu_ptr->Ax;
-	accy=(float)mpu_ptr->Ay;
-	accz=(float)mpu_ptr->Az;
-	aax = atan(accx / accz)*180 / pi-oAax;
-  	aay = atan(accy / accz)*180 / pi-oAay;
-	Gx=(float)mpu_ptr->Gx/GyroRatio-oGx;
-	Gy=(float)mpu_ptr->Gy/GyroRatio-oGy;
-	Gz=(float)mpu_ptr->Gz/GyroRatio-oGz;
-	Aay=Aay-t*Gx;
-	p_xz=p_xz+q_xz;
-	k_xz=p_xz/(p_xz+r_xz);
-	Aay=Aay+k_xz*(aay-Aay);
-	p_xz=(1-k_xz)*p_xz;
-  	Aax=Aax+t*Gy;
-  	p_yz=p_yz+q_yz;
-  	k_yz=p_yz/(p_yz+r_yz);
-  	Aax=Aax+k_yz*(aax-Aax);
-  	p_yz=(1-k_yz)*p_yz;
+	IIC_Write_Bits(MPU6050_Address, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
+	switch(range)
+	{
+		case 0: AcceRatio = 16384.0; break;
+		case 1: AcceRatio = 8192.0; break;
+		case 2: AcceRatio = 4096.0; break;
+		case 3: AcceRatio = 2048.0; break;
+	}
 }
 
-//**************************************
-//向IIC设备读取一个字节数据
-//**************************************
-uint8_t MPU6050_ReadI2C(uint8_t REG_Address)
+
+/**************************实现函数********************************************
+*函数原型:		void MPU6050_Set_Gyro_Range(uint8_t range)
+*功　　能:	    设置  MPU6050 陀螺仪的最大量程
+* FS_SEL=0    ±250    o/s	131     LSB/(o/s) 
+* FS_SEL=1    ±500    o/s	65.5    LSB/(o/s) 
+* FS_SEL=2    ±1000   o/s	32.8    LSB/(o/s)
+* FS_SEL=3    ±2000   o/s	16.4    LSB/(o/s) 
+*******************************************************************************/
+void MPU6050_Set_Gyro_Range(uint8_t range)
 {
-	uint8_t REG_data;
-	IIC_Start();                  //起始信号 
-	IIC_Send_Byte(SlaveAddress);  //发送陀螺仪地址+写信号
-	REG_data=IIC_Wait_Ack();	   
-	IIC_Send_Byte(REG_Address);   //发送存储单元地址，从0开始 
-	REG_data=IIC_Wait_Ack();	   
-	IIC_Start();                  //起始信号 
-	IIC_Send_Byte(SlaveAddress+1);//发送陀螺仪地址+读信号
-	REG_data=IIC_Wait_Ack();	   
-  	REG_data=IIC_Read_Byte(0);		//读取一个字节，不继续再读，发送NAK，读出寄存器数据
-	IIC_Stop();	                  //停止信号 
-	return REG_data;
+	IIC_Write_Bits(MPU6050_Address, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
+	switch(range)
+	{
+		case 0: GyroRatio = 131.0; break;
+		case 1: GyroRatio = 65.5; break;
+		case 2: GyroRatio = 32.8; break;
+		case 3: GyroRatio = 16.4; break;
+	}
 }
 
-//**************************************
-//向IIC设备写入一个字节数据
-//**************************************
-void MPU6050_WriteI2C(uint8_t REG_Address,uint8_t REG_data)
-{
-    IIC_Start();                   //起始信号 
-    IIC_Send_Byte(SlaveAddress);   //发送陀螺仪地址+写信号 
-    IIC_Wait_Ack();	   
-    IIC_Send_Byte(REG_Address);    //内部寄存器地址 
-    IIC_Wait_Ack(); 	 										  		   
-    IIC_Send_Byte(REG_data);       //内部寄存器数据 
-    IIC_Wait_Ack(); 	 										  		   
-    IIC_Stop();                    //发送停止信号 
-}
 
-//**************************************
-//初始化MPU6050
-//**************************************
+
+/**************************实现函数********************************************
+*函数原型:		void MPU6050_Init(void)
+*功　　能:	    初始化 	MPU6050 以进入可用状态。
+*******************************************************************************/
 void MPU6050_Init(void)
 {
-	uint8_t Add;//器件地址 
-	IIC_Init();//初始化IIC端口 
-	Add=MPU6050_ReadI2C(WHO_AM_I);   //读取陀螺仪ID地址 
-	//printf("ID=%x\r\n",Add);
-	MPU6050_WriteI2C(PWR_MGMT_1, 0x00);	//解除休眠状态 
-	MPU6050_WriteI2C(SMPLRT_DIV, 0x07);
-	MPU6050_WriteI2C(CONFIG, 0x06);
-	MPU6050_WriteI2C(GYRO_CONFIG, 0x18);
-	MPU6050_WriteI2C(ACCEL_CONFIG, 0x00);
+	uint8_t Add[1];//器件地址 
+	Add[0] = 1;
+	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_PWR_MGMT_1, 0x80);      //PWR_MGMT_1    -- DEVICE_RESET 1
+	delay_ms(50);
+	
+	
+	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_PWR_MGMT_1, 0x00);	//解除休眠状态 
+	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_SMPLRT_DIV, 0x07);
+
+	IIC_Read_Bytes(MPU6050_Address, MPU6050_RA_SMPLRT_DIV, 1, Add);
+
+	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_CONFIG, 0x06);
+	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_GYRO_CONFIG, 0x18); //FS_SEL=0    ±250    o/s	131     LSB/(o/s) 
+	GyroRatio = 131.0;
+	
+	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_ACCEL_CONFIG, 0x00); //AFS_SEL=0    ±2	g	16,384    LSB/g 
+	AcceRatio = 16384.0;
+	
 	delay_ms(100);
+
+	
+	MPU6050_getDeviceID(Add);   //读取陀螺仪ID地址 
+	
+	MPU6050_Get_Offset();
+	
+	
+}
+
+/**************************实现函数********************************************
+*函数原型:		void MPU6050_getDeviceID(uint8_t * Add)
+*功　　能:	    读取  MPU6050 WHO_AM_I 标识	 将得到 0x68
+*******************************************************************************/
+void MPU6050_getDeviceID(uint8_t * Add) 
+{
+    IIC_Read_Bytes(MPU6050_Address, MPU6050_RA_WHO_AM_I, 1, Add);
 }
 
 
 //读取3个轴的数据 
 //x,y,z读取到的数据 
-void MPU6050_RD_XYZ(MPU_TypeDef* Mympu)//读取AX，，,GX，， 
+void MPU6050_Read_RawData()
 {
 	uint8_t buf[14];
-	uint8_t i;
-	IIC_Start();  //IIC通信开始				 
-	IIC_Send_Byte(SlaveAddress);	//发送陀螺仪写地址+写信号。	 
-	IIC_Wait_Ack();	     //等待应答 
-	IIC_Send_Byte(0x3B);   		//发送该寄存器地址 
-	IIC_Wait_Ack(); 	 										  		   
- 	IIC_Start();  	 	   		//??D?????￡¤
-	IIC_Send_Byte(SlaveAddress+1);	//发送陀螺仪写地址+读信号 
-	IIC_Wait_Ack();
-	for(i=0;i<14;i++)
+	//MPU6050_data_old.Ax = MPU6050_data.Ax;
+	
+	IIC_Read_Bytes(MPU6050_Address, MPU6050_RA_ACCEL_XOUT_H, 14, buf);
+	
+	if(MPU6050_Offset_Done == 0)
 	{
-		if(i==13)buf[i]=IIC_Read_Byte(0);//最后一个，不应答NACK  
-		else buf[i]=IIC_Read_Byte(1);	//ack=1，应答 
- 	}	        	   
-	IIC_Stop();					//产生一个停止条件 
-	Mympu->Ax=(short)(((uint16_t)buf[0]<<8)+buf[1]); 
-	Mympu->Ay=(short)(((uint16_t)buf[2]<<8)+buf[3]); 
-	Mympu->Az=(short)(((uint16_t)buf[4]<<8)+buf[5]); 
-	Mympu->Tt=(short)(((uint16_t)buf[6]<<8)+buf[7]);
-	Mympu->Gx=(short)(((uint16_t)buf[8]<<8)+buf[9]); 
-	Mympu->Gy=(short)(((uint16_t)buf[10]<<8)+buf[11]); 
-	Mympu->Gz=(short)(((uint16_t)buf[12]<<8)+buf[13]);
+		MPU6050_data.Ax = (( ((int16_t)buf[0]) <<8) + buf[1]) / AcceRatio; 
+		MPU6050_data.Ay = (( ((int16_t)buf[2]) <<8) + buf[3]) / AcceRatio; 
+		MPU6050_data.Az = (( ((int16_t)buf[4]) <<8) + buf[5]) / AcceRatio; 
+		MPU6050_data.Tt = (( ((int16_t)buf[6]) <<8) + buf[7]);
+		MPU6050_data.Gx = ( (( ((int16_t)buf[8]) <<8) + buf[9]) / GyroRatio ) * pi / 180; 
+		MPU6050_data.Gy = ( (( ((int16_t)buf[10]) <<8) + buf[11]) / GyroRatio ) * pi / 180; 
+		MPU6050_data.Gz = ( (( ((int16_t)buf[12]) <<8) + buf[13]) / GyroRatio ) * pi / 180;
+	}
+		else
+		{
+			MPU6050_data.Ax = (( ((int16_t)buf[0]) <<8) + buf[1]) / AcceRatio - Ax_Offset; 
+			MPU6050_data.Ay = (( ((int16_t)buf[2]) <<8) + buf[3]) / AcceRatio - Ay_Offset; 
+			MPU6050_data.Az = (( ((int16_t)buf[4]) <<8) + buf[5]) / AcceRatio; 
+			MPU6050_data.Tt = (( ((int16_t)buf[6]) <<8) + buf[7]);
+			MPU6050_data.Gx = (( ((int16_t)buf[8]) <<8) + buf[9]) / GyroRatio * pi / 180 - Gx_Offset; 
+			MPU6050_data.Gy = (( ((int16_t)buf[10]) <<8) + buf[11]) / GyroRatio * pi / 180 - Gy_Offset; 
+			MPU6050_data.Gz = (( ((int16_t)buf[12]) <<8) + buf[13]) / GyroRatio * pi / 180 - Gz_Offset;			
+		}
+	
 }
 
+
 //读取ADXL的平均值 
-//x,y,z读取10次后取平均值 
-void MPU6050_RD_Avval(MPU_TypeDef* Mympu)
+//x,y,z读取8次后取平均值 
+void MPU6050_RawData_Average()
 {
 	uint8_t i;  
-	MPU_TypeDef tMympu;   
-	for(i=0;i<10;i++)
+	   
+	for(i=0;i<8;i++)
 	{
-		MPU6050_RD_XYZ(Mympu);//通过调用这个函数来获取6050测得的值 
-		delay_ms(10);
-		tMympu.Ax += (short)Mympu->Ax;
-		tMympu.Ay += (short)Mympu->Ay;
-		tMympu.Az += (short)Mympu->Az;	   
+		MPU6050_Read_RawData();//通过调用这个函数来获取6050测得的值 
+		// delay_ms(10);
+		MPU6050_data.Ax += (short)MPU6050_data.Ax;
+		MPU6050_data.Ay += (short)MPU6050_data.Ay;
+		MPU6050_data.Az += (short)MPU6050_data.Az;	   
 	}
-	Mympu->Ax=tMympu.Ax/10;
-	Mympu->Ay=tMympu.Ay/10;
-	Mympu->Az=tMympu.Az/10;
-} 
+	MPU6050_data.Ax = MPU6050_data.Ax / 8;
+	MPU6050_data.Ay = MPU6050_data.Ay / 8;
+	MPU6050_data.Az = MPU6050_data.Az / 8;
+}

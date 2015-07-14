@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements main function.
-* Creation Date: 2015/6/7
+* Creation Date: 2015/7/14
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -42,12 +42,10 @@ Includes
 ***********************************************************************************************************************/
 #include "r_cg_macrodriver.h"
 #include "r_cg_cgc.h"
-#include "r_cg_port.h"
 #include "r_cg_timer.h"
 /* Start user code for include. Do not edit comment generated here */
 
-#include "MPU_6050.h"
-#include "IIC.h"
+#include "include.h"
 
 /* End user code. Do not edit comment generated here */
 #include "r_cg_userdefine.h"
@@ -56,8 +54,6 @@ Includes
 Global variables and functions
 ***********************************************************************************************************************/
 /* Start user code for global. Do not edit comment generated here */
-
-
 /* End user code. Do not edit comment generated here */
 void R_MAIN_UserInit(void);
 
@@ -72,15 +68,21 @@ void main(void)
     R_MAIN_UserInit();
     /* Start user code. Do not edit comment generated here */
     
-	MPU6050_start();
-	TDR01=0;TDR02=0;TDR03=0;TDR04=0; //驱动电机的四路方波的占空比 
-	R_TAU0_Channel0_Start();  //方波输出，电机驱动
+	Motor_Init();	//Channel0方波输出，电机驱动
+	IIC_Init();	//初始化IIC端口 
+	MPU6050_Init();
+	HMC5883L_Init();
+	HCSR04_Init();
+	PID_Parameter_Init();
+
+	R_TAU0_Channel5_Start();
 	
-	while (1U)
-	{
-		NOP();
-	}
-	
+    while (1U)
+    {
+	//Get_Attitude();
+        NOP();
+
+    }
     /* End user code. Do not edit comment generated here */
 }
 
@@ -98,13 +100,4 @@ void R_MAIN_UserInit(void)
 }
 
 /* Start user code for adding. Do not edit comment generated here */
-
-
-
-	
-
-uint16_t PWM_control(float perc){
-	return ( (uint16_t)(perc*TDR00));
-}
-
 /* End user code. Do not edit comment generated here */

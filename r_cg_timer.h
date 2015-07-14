@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements device driver for TAU module.
-* Creation Date: 2015/6/7
+* Creation Date: 2015/7/14
 ***********************************************************************************************************************/
 
 #ifndef TAU_H
@@ -398,29 +398,31 @@ Macro definitions (Register bit)
 Macro definitions
 ***********************************************************************************************************************/
 /* 16-bit timer data register 00 (TDR00) */
-#define _0C7F_TAU_TDR00_VALUE                   (0x0C7FU)
+#define _9C3F_TAU_TDR00_VALUE                   (0x9C3FU)
 /* 16-bit timer data register 01 (TDR01) */
-#define _0640_TAU_TDR01_VALUE                   (0x0640U)
+#define _4E20_TAU_TDR01_VALUE                   (0x4E20U)
 /* 16-bit timer data register 02 (TDR02) */
-#define _0640_TAU_TDR02_VALUE                   (0x0640U)
+#define _4E20_TAU_TDR02_VALUE                   (0x4E20U)
 /* 16-bit timer data register 03 (TDR03) */
-#define _0640_TAU_TDR03_VALUE                   (0x0640U)
+#define _4E20_TAU_TDR03_VALUE                   (0x4E20U)
 /* 16-bit timer data register 04 (TDR04) */
-#define _0640_TAU_TDR04_VALUE                   (0x0640U)
+#define _4E20_TAU_TDR04_VALUE                   (0x4E20U)
 /* Clock divisor for TAU0 channel 0 */
-#define _0001_TAU0_CHANNEL0_DIVISOR             (0x0001U)
+#define _0010_TAU0_CHANNEL0_DIVISOR             (0x0010U)
 /* Clock divisor for TAU0 channel 1 */
-#define _0001_TAU0_CHANNEL1_DIVISOR             (0x0001U)
+#define _0010_TAU0_CHANNEL1_DIVISOR             (0x0010U)
 /* Clock divisor for TAU0 channel 2 */
-#define _0001_TAU0_CHANNEL2_DIVISOR             (0x0001U)
+#define _0010_TAU0_CHANNEL2_DIVISOR             (0x0010U)
 /* Clock divisor for TAU0 channel 3 */
-#define _0001_TAU0_CHANNEL3_DIVISOR             (0x0001U)
+#define _0010_TAU0_CHANNEL3_DIVISOR             (0x0010U)
 /* Clock divisor for TAU0 channel 4 */
-#define _0001_TAU0_CHANNEL4_DIVISOR             (0x0001U)
+#define _0010_TAU0_CHANNEL4_DIVISOR             (0x0010U)
 /* 16-bit timer data register 05 (TDR05) */
-#define _031F_TAU_TDR05_VALUE                   (0x031FU)
+#define _9C3F_TAU_TDR05_VALUE                   (0x9C3FU)
 /* Clock divisor for TAU0 channel 5 */
-#define _0001_TAU0_CHANNEL5_DIVISOR             (0x0001U)
+#define _0004_TAU0_CHANNEL5_DIVISOR             (0x0004U)
+/* Clock divisor for TAU0 channel 6 */
+#define _0010_TAU0_CHANNEL6_DIVISOR             (0x0010U)
 
 /***********************************************************************************************************************
 Typedef definitions
@@ -434,6 +436,9 @@ void R_TAU0_Channel0_Start(void);
 void R_TAU0_Channel0_Stop(void);
 void R_TAU0_Channel5_Start(void);
 void R_TAU0_Channel5_Stop(void);
+void R_TAU0_Channel6_Start(void);
+void R_TAU0_Channel6_Stop(void);
+void R_TAU0_Channel6_Get_PulseWidth(uint32_t * const width);
 
 /* Start user code for function. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */

@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file includes user definition.
-* Creation Date: 2015/6/7
+* Creation Date: 2015/7/14
 ***********************************************************************************************************************/
 
 #ifndef _USER_DEF_H
@@ -39,11 +39,5 @@ User definitions
 ***********************************************************************************************************************/
 
 /* Start user code for function. Do not edit comment generated here */
-
-#define mtr01	TDR01   // the duty cycle of PWM 
-#define mtr02	TDR02
-#define mtr03	TDR03
-#define mtr04	TDR04
-
 /* End user code. Do not edit comment generated here */
 #endif
