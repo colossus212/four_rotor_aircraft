@@ -4,7 +4,7 @@
 
 
 void HCSR04_Init()£»
-float Get_Height(void);
+float Get_Height();
 
 
 

@@ -5,7 +5,8 @@
 * Device(s)	: R5F100LE
 * Tool-Chain	: CA78K0R
 * Description	: ´ÅÁ¦¼ÆÄ£¿é
-* API		: void Multiple_Read_HMC5883L(void)
+* API		: HMC5883L_Init(void)
+		  void Multiple_Read_HMC5883L(void)
 
 		  int16_t Get_HMC5883L_Hx();
 		  int16_t Get_HMC5883L_Hy();
@@ -57,8 +58,8 @@ void Multiple_Read_HMC5883L(void)
 {      	
  	uint8_t i;
 	uint8_t BUF[8];
-	static uint8_t filter_cnt=0;
-	int32_t temp1=0,temp2=0,temp3=0;
+	static uint8_t filter_cnt = 0;
+	int32_t temp1 = 0, temp2 = 0, temp3 = 0;
 	
 	 
 	IIC_Read_Bytes(HMC5883L_ADDRESS, 0x03, 6, BUF);

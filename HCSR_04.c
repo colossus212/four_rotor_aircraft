@@ -44,9 +44,9 @@ float Get_Height()
 	
 	R_TAU0_Channel6_Stop();
 	
-	TIME = width / 2.01;
+	TIME = width / 7.1;
 	
-	if(TIME >220 && TIME <20000)
+	if(TIME >100 && TIME <20000)
 	height = TIME / 58.8;
 	return height;
 }

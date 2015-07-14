@@ -147,7 +147,7 @@
 
 typedef struct 
 {
-	int16_t Ax,Ay,Az,Tt,Gx,Gy,Gz;
+	float Ax,Ay,Az,Tt,Gx,Gy,Gz;
 }	MPU6050_Struct;
 
 #endif

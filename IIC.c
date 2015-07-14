@@ -9,14 +9,17 @@
 		  uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
 		  uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
 		  uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data)
+		  
+		  #define IIC_SDA P5.1  //  Pin 34
+		  #define IIC_SCL P5.0  //  Pin 33
 		 		
 ************************************************/
 
 
 #include "include.h"
 
-#define	IIC_SDA	P5.1
-#define IIC_SCL P5.0
+#define	IIC_SDA	P5.1  //  Pin 34
+#define IIC_SCL P5.0  //  Pin 33
 #define READ_SDA P5.1
 
 void SCL_OUTMODE()	//set P5.0 output mode
@@ -78,19 +81,20 @@ void IIC_Start(void)
 void IIC_Stop(void)
 {
 	SDA_OUTMODE();	//set P5.1 output mode
-	IIC_SCL=0U;
-	IIC_SDA=0U;	//STOP : when CLK is high DATA change form low to high
+	IIC_SCL = 0U;
+	IIC_SDA = 0U;	//STOP : when CLK is high DATA change form low to high
  	delay_us(4);
-	IIC_SCL=1U;
-	IIC_SDA=1U;
+	IIC_SCL = 1U;
+	delay_us(4);
+	IIC_SDA = 1U;
 	delay_us(4);
 }
 
 /**************************实现函数********************************************
 *函数原型:		uint8_t IIC_Wait_Ack(void)
 *功　　能:	    等待应答信号到来 
-//返回值：1，接收应答失败
-//        0，接收应答成功
+*返回值：1，接收应答失败
+*        0，接收应答成功
 *******************************************************************************/
 
 uint8_t IIC_Wait_Ack(void)	//wait for ACK
@@ -193,11 +197,11 @@ void IIC_Send_Byte(unsigned char txd)	//send Byte
 /**************************实现函数********************************************
 *函数原型:		uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
 *功　　能:	    读取指定设备 指定寄存器的 length个值
-输入		dev  目标设备地址
-		reg	  寄存器地址
-		length 要读的字节数
-		*data  读出的数据将要存放的指针
-返回   读出来的字节数量
+*输入		dev  目标设备地址
+*		reg	  寄存器地址
+*		length 要读的字节数
+*		*data  读出的数据将要存放的指针
+*返回   读出来的字节数量
 *******************************************************************************/ 
 
 uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
@@ -205,52 +209,52 @@ uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
     	uint8_t count = 0;
 	uint8_t temp;
 	IIC_Start();
-	IIC_Send_Byte(dev);	   //发送写命令
+	IIC_Send_Byte(dev);	   
 	IIC_Wait_Ack();
-	IIC_Send_Byte(reg);   //发送地址
+	IIC_Send_Byte(reg);   
 	IIC_Wait_Ack();	  
 	IIC_Start();
-	IIC_Send_Byte(dev + 1);  //进入接收模式	
+	IIC_Send_Byte(dev + 1);  	
 	IIC_Wait_Ack();
 	
     	for(count = 0; count < length; count++)
 	{
 		 
 		 if(count != (length - 1) )
-		 	temp = IIC_Receive_Byte(1);  //带ACK的读数据
+		 	temp = IIC_Receive_Byte(1);  
 		 	else  
-			temp = IIC_Receive_Byte(0);	 //最后一个字节NACK
+			temp = IIC_Receive_Byte(0);	
 
 		data[count] = temp;
 	}
-	IIC_Stop();//产生一个停止条件
+	IIC_Stop();
 	return count;
 }
 
 /**************************实现函数********************************************
 *函数原型:		uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
 *功　　能:	    将多个字节写入指定设备 指定寄存器
-输入		dev  目标设备地址
-		reg	  寄存器地址
-		length 要写的字节数
-		*data  将要写的数据的首地址
-返回   返回是否成功
+*输入		dev  目标设备地址
+*		reg	  寄存器地址
+*		length 要写的字节数
+*		*data  将要写的数据的首地址
+*返回   返回是否成功
 *******************************************************************************/ 
 uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
 {
   
  	uint8_t count = 0;
 	IIC_Start();
-	IIC_Send_Byte(dev);	   //发送写命令
+	IIC_Send_Byte(dev);	  
 	IIC_Wait_Ack();
-	IIC_Send_Byte(reg);   //发送地址
+	IIC_Send_Byte(reg);   
 	IIC_Wait_Ack();	  
 	for(count = 0; count < length; count++)
 	{
 		IIC_Send_Byte(data[count]); 
 		IIC_Wait_Ack(); 
 	 }
-	IIC_Stop();//产生一个停止条件
+	IIC_Stop();
 
 	return 1; //status == 0;
 }
@@ -260,27 +264,28 @@ uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
 /**************************实现函数********************************************
 *函数原型:		uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
 *功　　能:	    写入指定设备 指定寄存器一个字节
-输入		dev  目标设备地址
-		reg	   寄存器地址
-		data  将要写入的字节
-返回   1
+*输入		dev  目标设备地址
+*		reg	   寄存器地址
+*		data  将要写入的字节
+*返回   1
 *******************************************************************************/ 
 uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
 {
 	return IIC_Write_Bytes(dev, reg, 1, &data);
+	return 1; //status == 0;
 }
 
 /**************************实现函数********************************************
 *函数原型:		uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data)
 *功　　能:	    读 修改 写 指定设备 指定寄存器一个字节 中的多个位
-输入	dev  目标设备地址
-		reg	   寄存器地址
-		bitStart  目标字节的起始位
-		length   位长度
-		data    存放改变目标字节位的值
-返回   	成功 为1 
- 		失败为0
-*******************************************************************************/ 
+*输入	dev  目标设备地址
+*		reg	   寄存器地址
+*		bitStart  目标字节的起始位
+*		length   位长度
+*		data    存放改变目标字节位的值
+*返回   	成功 为1 
+*		失败为0
+*******************************************************************************/
 uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data)
 {
 
