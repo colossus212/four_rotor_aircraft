@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements device driver for TAU module.
-* Creation Date: 2015/7/14
+* Creation Date: 2015/7/16
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -117,8 +117,8 @@ void R_TAU0_Create(void)
     /* Set INTTM05 high priority */
     TMPR105 = 0U;
     TMPR005 = 0U;
-    /* Set INTTM06 low priority */
-    TMPR106 = 1U;
+    /* Set INTTM06 level 1 priority */
+    TMPR106 = 0U;
     TMPR006 = 1U;
     /* Channel 0 is used as master channel for PWM output function */
     TMR00 = _8000_TAU_CLOCK_SELECT_CKM1 | _0000_TAU_CLOCK_MODE_CKS | _0000_TAU_TRIGGER_SOFTWARE |

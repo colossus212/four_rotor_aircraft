@@ -31,7 +31,7 @@ void SDA_INMODE()	//set P5.0 input mode
 {
 	PM5|=_02_PMn1_MODE_INPUT;	//set P5.0 input mode
 	PU5|=_02_PUn1_PULLUP_ON;	//set P5.1 with pullup resistor
-	IIC_SDA=1U;	//set P5.1 as high
+	IIC_SDA = 1U;	//set P5.1 as high
 }
 
 void SDA_OUTMODE()  //set P5.0 output mode
@@ -184,13 +184,13 @@ void IIC_Send_Byte(unsigned char txd)	//send Byte
     IIC_SCL=0U;
     for(t = 0; t < 8; t++)
     {
-	IIC_SDA = (txd & 0x80) >> 7;
-	txd <<= 1;	  
-	delay_us(2);   
-	IIC_SCL = 1U;
-	delay_us(2); 
-	IIC_SCL = 0U;	
-	delay_us(2);
+		IIC_SDA = (txd & 0x80) >> 7;
+		txd <<= 1;	  
+		delay_us(2);   
+		IIC_SCL = 1U;
+		delay_us(2); 
+		IIC_SCL = 0U;	
+		delay_us(2);
     }	 
 }
 
@@ -303,4 +303,24 @@ uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t lengt
 	{
         	return 0;
     	}
+}
+
+/**************************实现函数********************************************
+*函数原型:		uint8_t IIC_Write_Bit(u8 dev, u8 reg, u8 bitNum, u8 data)
+*功　　能:	    读 修改 写 指定设备 指定寄存器一个字节 中的1个位
+输入	dev  目标设备地址
+		reg	   寄存器地址
+		bitNum  要修改目标字节的bitNum位
+		data  为0 时，目标位将被清0 否则将被置位
+返回   成功 为1 
+ 		   失败为0
+*******************************************************************************/ 
+uint8_t IIC_Write_Bit(uint8_t dev, uint8_t reg, uint8_t bitNum, uint8_t data)
+{
+    uint8_t b;
+    
+    IIC_Read_Bytes(dev, reg, 1, &b);
+    b = (data != 0) ? (b | (1 << bitNum)) : (b & ~(1 << bitNum));
+    
+    return IIC_Write_Byte(dev, reg, b);
 }

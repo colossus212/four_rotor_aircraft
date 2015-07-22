@@ -26,5 +26,6 @@ uint8_t IIC_Read_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data);
 uint8_t IIC_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data);
 uint8_t IIC_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data);
 uint8_t IIC_Write_Bits(uint8_t dev, uint8_t reg, uint8_t bitStart, uint8_t length, uint8_t data);
+uint8_t IIC_Write_Bit(uint8_t dev, uint8_t reg, uint8_t bitNum, uint8_t data);
 
 #endif

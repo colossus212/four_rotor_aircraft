@@ -23,24 +23,19 @@
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
-* File Name    : r_cg_timer_user.c
+* File Name    : r_cg_serial_user.c
 * Version      : CodeGenerator for RL78/G13 V2.00.00.07 [22 Feb 2013]
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
-* Description  : This file implements device driver for TAU module.
+* Description  : This file implements device driver for Serial module.
 * Creation Date: 2015/7/16
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
 Pragma directive
 ***********************************************************************************************************************/
-#pragma interrupt INTTM00 r_tau0_channel0_interrupt
-#pragma interrupt INTTM01 r_tau0_channel1_interrupt
-#pragma interrupt INTTM02 r_tau0_channel2_interrupt
-#pragma interrupt INTTM03 r_tau0_channel3_interrupt
-#pragma interrupt INTTM04 r_tau0_channel4_interrupt
-#pragma interrupt INTTM05 r_tau0_channel5_interrupt
-#pragma interrupt INTTM06 r_tau0_channel6_interrupt
+#pragma interrupt INTST0 r_uart0_interrupt_send
+#pragma interrupt INTSR0 r_uart0_interrupt_receive
 /* Start user code for pragma. Do not edit comment generated here */
 /* End user code. Do not edit comment generated here */
 
@@ -48,15 +43,12 @@ Pragma directive
 Includes
 ***********************************************************************************************************************/
 #include "r_cg_macrodriver.h"
-#include "r_cg_timer.h"
+#include "r_cg_serial.h"
 /* Start user code for include. Do not edit comment generated here */
 
-#include "r_cg_serial.h"
-#include "HCSR_04.h"
-#include "IMU.h"
+#include "r_cg_timer.h"
 #include "control.h"
-#include "MPU_6050.h"
-#include "HCSR_04.h"
+#include "motor.h"
 
 /* End user code. Do not edit comment generated here */
 #include "r_cg_userdefine.h"
@@ -64,136 +56,131 @@ Includes
 /***********************************************************************************************************************
 Global variables and functions
 ***********************************************************************************************************************/
-/* For TAU0_ch6 pulse measurement */
-volatile uint32_t g_tau0_ch6_width = 0U;
+extern volatile uint8_t * gp_uart0_tx_address;         /* uart0 send buffer address */
+extern volatile uint16_t  g_uart0_tx_count;            /* uart0 send data number */
+extern volatile uint8_t * gp_uart0_rx_address;         /* uart0 receive buffer address */
+extern volatile uint16_t  g_uart0_rx_count;            /* uart0 receive data number */
+extern volatile uint16_t  g_uart0_rx_length;           /* uart0 receive data length */
 /* Start user code for global. Do not edit comment generated here */
-
-uint8_t Count_for_Height = 0;
-
 /* End user code. Do not edit comment generated here */
 
 /***********************************************************************************************************************
-* Function Name: r_tau0_channel0_interrupt
-* Description  : This function is INTTM00 interrupt service routine.
+* Function Name: r_uart0_interrupt_receive
+* Description  : This function is INTSR0 interrupt service routine.
 * Arguments    : None
 * Return Value : None
 ***********************************************************************************************************************/
-__interrupt static void r_tau0_channel0_interrupt(void)
+__interrupt static void r_uart0_interrupt_receive(void)
 {
-    /* Start user code. Do not edit comment generated here */
-   
-    /* End user code. Do not edit comment generated here */
-}
+    uint8_t rx_data;
+    uint8_t err_type;
+    
+    err_type = (uint8_t)(SSR01 & 0x0007U);
+    SIR01 = (uint16_t)err_type;
 
-/***********************************************************************************************************************
-* Function Name: r_tau0_channel1_interrupt
-* Description  : This function is INTTM01 interrupt service routine.
-* Arguments    : None
-* Return Value : None
-***********************************************************************************************************************/
-__interrupt static void r_tau0_channel1_interrupt(void)
-{
-    /* Start user code. Do not edit comment generated here */
-    /* End user code. Do not edit comment generated here */
-}
+    if (err_type != 0U)
+    {
+        r_uart0_callback_error(err_type);
+    }
+    
+    rx_data = RXD0;
+    
+    switch(rx_data)
+    {
+	    case 0x11: 
+	    {
+    			Control_Standby(); 
+	    		R_TAU0_Channel5_Stop(); 
+			Motor_RateFlash(0, 0, 0, 0);
+	    } 
+			break;
+	    case 0x22: Control_Fly(); R_TAU0_Channel5_Start(); break;
+    }
+    
 
-/***********************************************************************************************************************
-* Function Name: r_tau0_channel2_interrupt
-* Description  : This function is INTTM02 interrupt service routine.
-* Arguments    : None
-* Return Value : None
-***********************************************************************************************************************/
-__interrupt static void r_tau0_channel2_interrupt(void)
-{
-    /* Start user code. Do not edit comment generated here */
-    /* End user code. Do not edit comment generated here */
-}
+    if (g_uart0_rx_length > g_uart0_rx_count)
+    {
+        *gp_uart0_rx_address = rx_data;
+        gp_uart0_rx_address++;
+        g_uart0_rx_count++;
 
-/***********************************************************************************************************************
-* Function Name: r_tau0_channel3_interrupt
-* Description  : This function is INTTM03 interrupt service routine.
-* Arguments    : None
-* Return Value : None
-***********************************************************************************************************************/
-__interrupt static void r_tau0_channel3_interrupt(void)
-{
-    /* Start user code. Do not edit comment generated here */
-    /* End user code. Do not edit comment generated here */
-}
-
-/***********************************************************************************************************************
-* Function Name: r_tau0_channel4_interrupt
-* Description  : This function is INTTM04 interrupt service routine.
-* Arguments    : None
-* Return Value : None
-***********************************************************************************************************************/
-__interrupt static void r_tau0_channel4_interrupt(void)
-{
-    /* Start user code. Do not edit comment generated here */
-    /* End user code. Do not edit comment generated here */
-}
-
-/***********************************************************************************************************************
-* Function Name: r_tau0_channel5_interrupt
-* Description  : This function is INTTM05 interrupt service routine.
-* Arguments    : None
-* Return Value : None
-***********************************************************************************************************************/
-__interrupt static void r_tau0_channel5_interrupt(void)
-{
-    /* Start user code. Do not edit comment generated here */
-	uint8_t Buf[10];
-
-	if(Count_for_Height == 8)
-	{
-		Flash_Height();
-		Buf[6] = (uint16_t) Get_Height();
-		Buf[7] = (uint16_t) Get_Height() >> 8;
-		R_UART0_Send(Buf + 6, 2);
-		Control_altitude(40);		
-		Count_for_Height = 0;
-	}
-	
-	if(Count_for_Height == 0)
-	{
-		Flash_Height_Prepare();
-	}
-	
-	Get_Attitude();
-
-		Buf[0] = (uint16_t) angle.yaw;
-		Buf[1] = (uint16_t) angle.yaw >> 8;
-		Buf[2] = (uint16_t) angle.roll;
-		Buf[3] = (uint16_t) angle.roll >> 8;
-		Buf[4] = (uint16_t) angle.pitch;
-		Buf[5] = (uint16_t) angle.pitch >> 8;
-		R_UART0_Send(Buf, 6);
-
-	Control_posture(0, 0, 0);
-	Control_Motor();
-	Count_for_Height++;
-	
-     //P13.0 = ~P13.0;
-    /* End user code. Do not edit comment generated here */
-}
-
-/***********************************************************************************************************************
-* Function Name: r_tau0_channel6_interrupt
-* Description  : This function is INTTM06 interrupt service routine.
-* Arguments    : None
-* Return Value : None
-***********************************************************************************************************************/
-__interrupt static void r_tau0_channel6_interrupt(void)
-{
-    if ((TSR06 & _0001_TAU_OVERFLOW_OCCURS) == 1U)    /* overflow occurs */
-    {            
-        g_tau0_ch6_width = (uint32_t)(TDR06 + 1U) + 0x10000U;
+        if (g_uart0_rx_length == g_uart0_rx_count)
+        {
+            r_uart0_callback_receiveend();
+        }
     }
     else
     {
-        g_tau0_ch6_width = (uint32_t)(TDR06 + 1U);
+        r_uart0_callback_softwareoverrun(rx_data);
     }
+}
 
+/***********************************************************************************************************************
+* Function Name: r_uart0_interrupt_send
+* Description  : This function is INTST0 interrupt service routine.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+__interrupt static void r_uart0_interrupt_send(void)
+{
+    if (g_uart0_tx_count > 0U)
+    {
+        TXD0 = *gp_uart0_tx_address;
+        gp_uart0_tx_address++;
+        g_uart0_tx_count--;
+    }
+    else
+    {
+        r_uart0_callback_sendend();
+    }
+}
+
+/***********************************************************************************************************************
+* Function Name: r_uart0_callback_receiveend
+* Description  : This function is a callback function when UART0 finishes reception.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+static void r_uart0_callback_receiveend(void)
+{
+    /* Start user code. Do not edit comment generated here */
+    /* End user code. Do not edit comment generated here */
+}
+
+/***********************************************************************************************************************
+* Function Name: r_uart0_callback_softwareoverrun
+* Description  : This function is a callback function when UART0 receives an overflow data.
+* Arguments    : rx_data -
+*                    receive data
+* Return Value : None
+***********************************************************************************************************************/
+static void r_uart0_callback_softwareoverrun(uint16_t rx_data)
+{
+    /* Start user code. Do not edit comment generated here */
+    /* End user code. Do not edit comment generated here */
+}
+
+/***********************************************************************************************************************
+* Function Name: r_uart0_callback_sendend
+* Description  : This function is a callback function when UART0 finishes transmission.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+static void r_uart0_callback_sendend(void)
+{
+    /* Start user code. Do not edit comment generated here */
+    /* End user code. Do not edit comment generated here */
+}
+
+/***********************************************************************************************************************
+* Function Name: r_uart0_callback_error
+* Description  : This function is a callback function when UART0 reception error occurs.
+* Arguments    : err_type -
+*                    error type value
+* Return Value : None
+***********************************************************************************************************************/
+static void r_uart0_callback_error(uint8_t err_type)
+{
     /* Start user code. Do not edit comment generated here */
     /* End user code. Do not edit comment generated here */
 }

@@ -1,22 +1,21 @@
+#include "r_cg_macrodriver.h"
+
 #ifndef _PID_
 #define _PID_
 
-#include "include.h"
-
-
-// PID结构体
+// PID Struct
 typedef struct
 {
-    float kp;
-    float ki;
-    float kd;
-    float error;
-    float preerror;
-    float integ;
-    float integ_max;
-    float deriv;
-    float output;
- 
+	float kp;
+	float ki;
+	float kd;
+	float error;
+	float preerror;
+	float prepreerror;
+	float integ;
+	float integ_max;
+	float deriv;
+	float output; 
 }PID_Typedef;
 
 //----PID结构体实例化----
@@ -34,8 +33,9 @@ extern PID_Typedef alt_vel_PID;
 
 
 void PID_Parameter_Init();
-void PID_Postion_Cal(PID_Typedef * PID,float target,float measure);
-
+void PID_Position(PID_Typedef * PID,float target,float measure);
+void PID_Incremental(PID_Typedef * PID,float target,float measure);
+void PID_Position_Fuzzy(PID_Typedef * PID,float target,float measure);
 
 
 #endif

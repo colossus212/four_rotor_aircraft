@@ -12,9 +12,7 @@
 		  int16_t Get_HMC5883L_Hy();
 		  int16_t Get_HMC5883L_Hz();
 		  
-		  //extern int16_t Get_HMC5883L_Hx(), Y_HMC, Z_HMC;
-		  
-		  待解决问题： 还不清楚磁力计读出值的单位和使用方法
+		  extern int16_t Get_HMC5883L_Hx(), Y_HMC, Z_HMC;
 		 
 ************************************************/
 
@@ -23,24 +21,23 @@
 #define  FILL_NUM  10
 
 
-int16_t X_HMC,Y_HMC,Z_HMC,x,y,z;
+float X_HMC,Y_HMC,Z_HMC,x,y,z;
 
-int16_t x_offest=0,y_offest=0;
-double y_gain=1;
+float x_offset = 0, y_offset = 0, x_gain = 1, y_gain = 1;
 
 //int16_t X_BUFF[FILL_NUM],Y_BUFF[FILL_NUM],Z_BUFF[FILL_NUM];
 
-int16_t Get_HMC5883L_Hx()
+float Get_HMC5883L_Hx()
 {
 	return X_HMC;
 }
 
-int16_t Get_HMC5883L_Hy()
+float Get_HMC5883L_Hy()
 {
 	return Y_HMC;
 }
 
-int16_t Get_HMC5883L_Hz()
+float Get_HMC5883L_Hz()
 {
 	return Z_HMC;
 }
@@ -56,10 +53,10 @@ uint8_t HMC5883L_Init(void)
 
 void Multiple_Read_HMC5883L(void)
 {      	
- 	uint8_t i;
+ 	//uint8_t i;
 	uint8_t BUF[8];
-	static uint8_t filter_cnt = 0;
-	int32_t temp1 = 0, temp2 = 0, temp3 = 0;
+	//static uint8_t filter_cnt = 0;
+	//int32_t temp1 = 0, temp2 = 0, temp3 = 0;
 	
 	 
 	IIC_Read_Bytes(HMC5883L_ADDRESS, 0x03, 6, BUF);
@@ -80,9 +77,23 @@ void Multiple_Read_HMC5883L(void)
 		
 	//filter_cnt++;
 	//if(filter_cnt==FILL_NUM)	filter_cnt=0;
+
+	//HMC5883L_Calibration();
 	    
-	X_HMC = 1 *(x + x_offest);
-	Y_HMC = (double)(y_gain * (y + y_offest));
-	Z_HMC = (double)(1.073 * (z +30));
+	X_HMC = x_gain * x + x_offset;
+	Y_HMC = y_gain * y + y_offset;
+	Z_HMC = 1.073 * (z +30);
 	
+}
+
+void HMC5883L_Calibration()
+{
+	float x_max = 0, x_min = 0, y_max = 0, y_min = 0;
+	if(x > x_max) x_max = x;
+	if(x < x_min) x_min = x;
+	if(y > y_max) y_max = y;
+	if(y < y_min) y_min = y;
+	y_gain = (x_max - x_min) / (y_max - y_min);
+	x_offset = x_gain * (0.5 * (x_max - x_min) - x_max);
+	y_offset = y_gain * (0.5 * (y_max - y_min) - y_max);
 }

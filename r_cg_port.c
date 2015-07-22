@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements device driver for PORT module.
-* Creation Date: 2015/7/12
+* Creation Date: 2015/7/16
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -60,8 +60,9 @@ Global variables and functions
 ***********************************************************************************************************************/
 void R_PORT_Create(void)
 {
-    P5 = _00_Pn0_OUTPUT_0;
-    PM5 = _00_PMn0_MODE_OUTPUT | _02_PMn1_MODE_INPUT | _04_PMn2_NOT_USE | _08_PMn3_NOT_USE | _10_PMn4_NOT_USE |
+    P5 = _00_Pn0_OUTPUT_0 | _00_Pn1_OUTPUT_0 | _00_Pn3_OUTPUT_0;
+    P13 = _01_Pn0_OUTPUT_1;
+    PM5 = _00_PMn0_MODE_OUTPUT | _00_PMn1_MODE_OUTPUT | _04_PMn2_NOT_USE | _00_PMn3_MODE_OUTPUT | _10_PMn4_NOT_USE |
           _20_PMn5_NOT_USE | _C0_PM5_DEFAULT;
 }
 

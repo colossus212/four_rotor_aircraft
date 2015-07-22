@@ -28,7 +28,7 @@
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : This file implements main function.
-* Creation Date: 2015/7/14
+* Creation Date: 2015/7/16
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -42,6 +42,8 @@ Includes
 ***********************************************************************************************************************/
 #include "r_cg_macrodriver.h"
 #include "r_cg_cgc.h"
+#include "r_cg_port.h"
+#include "r_cg_serial.h"
 #include "r_cg_timer.h"
 /* Start user code for include. Do not edit comment generated here */
 
@@ -68,20 +70,27 @@ void main(void)
     R_MAIN_UserInit();
     /* Start user code. Do not edit comment generated here */
     
-	Motor_Init();	//Channel0方波输出，电机驱动
-	IIC_Init();	//初始化IIC端口 
+
+	
+	Control_Standby();
+	Motor_Init();
+	IIC_Init();
 	MPU6050_Init();
 	HMC5883L_Init();
 	HCSR04_Init();
 	PID_Parameter_Init();
+	KalmanFilterParameter_Init();
 
-	R_TAU0_Channel5_Start();
-	
+	R_UART0_Start();
+	delay_s(2);
+	//R_TAU0_Channel5_Start();
+
+	delay_ms(100);
+	//Control_Fly();
+
     while (1U)
     {
-	//Get_Attitude();
-        NOP();
-
+		NOP();
     }
     /* End user code. Do not edit comment generated here */
 }

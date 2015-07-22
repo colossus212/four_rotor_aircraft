@@ -57,3 +57,5 @@ Temporary Items
 *.mtpj
 *.mtud
 
+*.lmf
+DefaultBuild/four_rotor_aircraft.lmf

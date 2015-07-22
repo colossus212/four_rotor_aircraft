@@ -1,54 +1,23 @@
 
 /**********************************************************************************
- * 文件名  ：IMU.c
- * 描述    ：姿态解算         
+ * 文件名  ：IMU.c  
+ * Version	: 2015.7.10 By DHP
+ * Device(s)	: R5F100LE
+ * Tool-Chain	: CA78K0R
+ * Description	: 姿态解算
+ * API		: void Get_Attitude()
 **********************************************************************************/
 
 #include "include.h"
 #include "math.h"
-
+//#include "KalmanFilter.h"
 
 struct _angle angle;
 
-/***********************	
-	Q:过程噪声，Q增大，动态响应变快，收敛稳定性变坏
-	R:测量噪声，R增大，动态响应变慢，收敛稳定性变好	
-***********************/
-
-#define KALMAN_Q        0.02
-#define KALMAN_R        6.0000
-
-KalmanFilter_Typedef Kalman_Ax, Kalman_Ay, Kalman_Az;
-
-void KalmanFilterParameter_Load()
-{
-	Kalman_Ax.Q = Kalman_Ay.Q = Kalman_Az.Q = KALMAN_Q;
-	Kalman_Ax.R = Kalman_Ay.R = Kalman_Az.R = KALMAN_R;
-}
-
-/*********** 卡尔曼滤波***********/
-
-static double KalmanFilter(const double ResrcData, KalmanFilter_Typedef *  Kalman)
-{
-   double x_mid;
-   double x_now;
-   double p_mid;
-   double p_now;
-   double kg;        
-
-   x_mid = Kalman->x_last;		//x_last = x(k-1|k-1), x_mid = x(k|k-1)
-   p_mid = Kalman->p_last + Kalman->Q;	//p_mid = p(k|k-1), p_last = p(k-1|k-1), Q=噪声
-   kg = p_mid / (p_mid + Kalman->R);			//kg为kalman filter 卡尔曼增益，R为噪声
-   x_now = x_mid + kg * (ResrcData - x_mid);//估计出的最优值
-                
-   p_now = (1 - kg) * p_mid;//最优值对应的covariance       
-   Kalman->p_last = p_now; //更新covariance值
-   Kalman->x_last = x_now; //更新系统状态值
-   return x_now;          
- }
 
 //   快速求平方根倒数
-float Q_rsqrt(float number)	   //就是求一个数的平方根倒数，用牛顿迭代法就是因为算法更快
+
+float Q_rsqrt(float number)	   
 {
 	long i;
 	float x2, y;
@@ -87,10 +56,10 @@ float SIN(float y)	  //siny的泰勒展开近似值
 
 /***********************************************
   * @brief  可变增益自适应参数
-  * @param  None                                                  
+  * @param  None  //计算误差值，抑制误差过大
   * @retval None
 ************************************************/
-float VariableParameter(float error)   //计算误差值，抑制误差过大
+float VariableParameter(float error)   
 {
 	float  result = 0;
 	
@@ -119,8 +88,7 @@ void Prepare_Data(void)
 {       
 	MPU6050_Read_RawData();         //读取6050
 	Multiple_Read_HMC5883L();   //读取地磁数据
-	
-	KalmanFilterParameter_Load();
+
 	MPU6050_data.Ax = KalmanFilter(MPU6050_data.Ax, & Kalman_Ax);
 	MPU6050_data.Ay = KalmanFilter(MPU6050_data.Ay, & Kalman_Ay);
 	MPU6050_data.Az = KalmanFilter(MPU6050_data.Az, & Kalman_Az);
@@ -133,7 +101,7 @@ float qa0, qa1, qa2, qa3;     //四元数法  得到当前姿态
 #define Kp 0.8f               // 比例积分控制器的P  proportional gain governs rate of convergence to accelerometer比例增益控制收敛速度的加速度计/magnetometer 磁强计
 #define Ki 0.0015f            // 比例积分控制器的I     integral gain governs rate of convergence of gyroscope biases
 
-#define halfT 0.00125f        //姿态更新周期，一般是四元数微分求解时用的。 采样周期的一半  本程序 2.5MS 采集一次  所以 halfT是1.25MS
+#define halfT 0.0025f        //姿态更新周期，一般是四元数微分求解时用的。 采样周期的一半  本程序 2.5MS 采集一次  所以 halfT是1.25MS
 
 /**************************************
  * 函数名：Get_Attitude()
@@ -152,11 +120,13 @@ void Get_Attitude()
 float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
 float exInt = 0, eyInt = 0, ezInt = 0;    // scaled integral error	 误差中间变量
 float vx, vy, vz;// wx, wy, wz;	 当前姿态在竖直方向上的分量（N坐标中的竖直分量在B坐标系中的表示）
+float Xr,Yr;
+
 
 void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
 {
   float norm;	//计算空间向量的范数的中间变量
-	int16_t Xr,Yr;
+	
   
   float ex, ey, ez;	//加速度计表示的旋转和当前姿态在竖直方向上的分量在B坐标中的向量外积差
 
@@ -191,14 +161,14 @@ void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
   ey = (az*vx - ax*vz) ;
   ez = (ax*vy - ay*vx) ;
 
-  exInt = exInt + VariableParameter(ex) * ex * Ki;		//对误差进行积分
-  eyInt = eyInt + VariableParameter(ey) * ey * Ki;
-  ezInt = ezInt + VariableParameter(ez) * ez * Ki;
+  exInt = exInt + VariableParameter(ex) * Ki;		//对误差进行积分
+  eyInt = eyInt + VariableParameter(ey) * Ki;
+  ezInt = ezInt + VariableParameter(ez) * Ki;
 // adjusted gyroscope measurements
 
-	gx = gx + Kp *  VariableParameter(ex) * ex + exInt;			  //修正过后的陀螺仪的xyz
-	gy = gy + Kp *  VariableParameter(ey) * ey + eyInt;	
-	gz = gz + Kp *  VariableParameter(ez) * ez + ezInt;	
+	gx = gx + Kp *  VariableParameter(ex) + exInt;			  //修正过后的陀螺仪的xyz
+	gy = gy + Kp *  VariableParameter(ey) + eyInt;	
+	gz = gz + Kp *  VariableParameter(ez) + ezInt;	
   								
   // integrate quaternion rate and normalise			  //四元素的微分方程	，四元数的更新
   q0 = q0 + (-q1*gx - q2*gy - q3*gz)*halfT;
@@ -220,20 +190,29 @@ void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
 
 
 //	
-  	angle.roll = atan2(2*q2q3 + 2*q0q1, -2*q1q1 - 2*q2q2 + 1); // roll
-	angle.pitch = asin(-2*q1q3 + 2*q0q2); // pitch
+  	angle.roll = asin(-2*q1q3 + 2*q0q2); // pitch
+	angle.pitch = atan2(2*q2q3 + 2*q0q1, -2*q1q1 - 2*q2q2 + 1); // roll
 	
 	/*          关于地磁如何进行倾角补偿                       */    
 	/*参考  http://baike.baidu.com/view/1239157.htm?fr=aladdin */
 	
-	//Xr = X_HMC * COS(angle.pitch) + Y_HMC * SIN(-angle.pitch) * SIN(-angle.roll) - Z_HMC * COS(angle.roll) * SIN(-angle.pitch);
-	//Yr = Y_HMC * COS(angle.roll) + Z_HMC * SIN(-angle.roll);
+	Xr = X_HMC * COS(-angle.roll) + Y_HMC * SIN(angle.roll) * SIN(-angle.pitch) - Z_HMC * COS(angle.pitch) * SIN(angle.roll);
+	Yr = Y_HMC * COS(angle.pitch) + Z_HMC * SIN(-angle.pitch);
 	
-	angle.yaw = atan2( (double)Y_HMC, (double)X_HMC ) * RtA; // yaw 
+	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA; // yaw 
 	angle.roll *= RtA;
 	angle.pitch *= RtA;
 
 }
+
+void Get_Attitude_DMP()
+{	
+	Multiple_Read_HMC5883L();   //读取地磁数据
+	Xr = X_HMC * COS(-angle.roll) + Y_HMC * SIN(angle.roll) * SIN(-angle.pitch) - Z_HMC * COS(angle.pitch) * SIN(angle.roll);
+	Yr = Y_HMC * COS(angle.pitch) + Z_HMC * SIN(-angle.pitch);
+	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA;
+}
+
 
 /********************** 直接用欧拉角解算姿态 含卡夫曼滤波************************
 
