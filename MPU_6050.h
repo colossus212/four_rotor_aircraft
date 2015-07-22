@@ -2,7 +2,7 @@
 
 /***********************************************************************************************************************
 * File Name    : MPU_6050.h
-* Version      : 2015.6.10 By DHP
+* Version      : 2015.7.22 By DHP
 * Device(s)    : R5F100LE
 * Tool-Chain   : CA78K0R
 * Description  : MPU6050 definition
@@ -63,9 +63,9 @@ float  dmp_yaw;		//DMP 航向角，由于没有磁力计参与，航向角会飘  单位：度
 float  dmp_gyrox;	// 陀螺仪 X轴 角速度   单位：度每秒
 float  dmp_gyroy;   // 陀螺仪 Y轴 角速度   单位：度每秒
 float  dmp_gyroz;   // 陀螺仪 Z轴 角速度   单位：度每秒
-float  dmp_accx;	// 加速度计 X轴   单位：g  [9.8 m/S^2]
-float  dmp_accy;	// 加速度计 Y轴   单位：g  [9.8 m/S^2]
-float  dmp_accz;	// 加速度计 Z轴   单位：g  [9.8 m/S^2]
+float  dmp_accx;	// 加速度计 X轴   单位：m/S^2
+float  dmp_accy;	// 加速度计 Y轴   单位：m/S^2
+float  dmp_accz;	// 加速度计 Z轴   单位：m/S^2
 
 };
 

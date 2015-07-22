@@ -43,13 +43,10 @@ void Flash_Height_Prepare()
 }
 void Flash_Height()
 {	
-	R_TAU0_Channel6_Get_PulseWidth(& width);
-	
+	R_TAU0_Channel6_Get_PulseWidth(& width);	
 	R_TAU0_Channel6_Stop();
 	
-	TIME = width / 1.5;
-	
-	if(TIME >100 && TIME <20000)
-	
+	TIME = width / 1.5;	
+	if(TIME >100 && TIME <20000)	
 	HCSR_Height = TIME / 58.8;	
 }

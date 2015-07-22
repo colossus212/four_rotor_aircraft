@@ -5,14 +5,19 @@
 * Tool-Chain	: CA78K0R
 * Description	: SPI for ADNS_3080
 * API		: 
-		  uint8_t SPI_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t * data)
-		  uint8_t SPI_Write_Byte(uint8_t dev, uint8_t reg, uint8_t length, uint8_t * data)
-		  uint8_t SPI_Read_Byte(uint8_t dev, uint8_t reg, uint8_t * data)
+		  uint8_t SPI_Write_Bytes(uint8_t reg, uint8_t length, uint8_t * data);
+		  uint8_t SPI_Write_Byte(uint8_t reg, uint8_t data);
+
+		  uint8_t SPI_Read_Byte(uint8_t reg);
+		  void SPI_Read_Bytes(uint8_t reg, uint8_t length, uint8_t *data);
+
+		  void SPI_Burst_Mode_Read(uint8_t reg, uint16_t length, uint8_t * data);
+		  void SPI_Burst_Mode_Write(uint8_t reg, uint16_t length, uint8_t * data);
 		 		
 ************************************************/
 
-
 #include "SPI.h"
+#include "r_cg_port.h"
 
 #define SPI_SCLK P5.3
 #define SPI_MOSI P5.4
@@ -89,11 +94,50 @@ void SPI_Stop(void)
 	delay_us(1); //From last SCLK falling edge to NCS rising edge,  for valid MISO data transfer need 120 ns
 	SPI_NCS = 1U;
 	delay_us(1);
+	SPI_SCLK = 1U;
 }
 
 
 /**************************实现函数********************************************
-*函数原型:		uint8_t SPI_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t* data)
+*函数原型:		void SPI_Send_Byte(unsigned char txd)
+*功　　能:	    SPI发送一个字节
+*******************************************************************************/
+void SPI_Send_Byte(unsigned char txd)	//send Byte 2 * 8 = 16 us
+{
+	uint8_t i;
+	for(i = 0; i < 8; i++)
+	{
+		SPI_SCLK = 0U;
+		SPI_MOSI = (txd & 0x80) >> 7;
+		txd <<= 1;	  
+		delay_us(1);   
+		SPI_SCLK = 1U;
+		delay_us(1); 
+	}
+}
+
+/**************************实现函数********************************************
+*函数原型:		void SPI_Receive_Byte()
+*功　　能:	    SPI接收一个字节
+*******************************************************************************/
+uint8_t SPI_Receive_Byte()  // need 2 * 8 = 16 us
+{
+	uint8_t i, receive;
+	for(i = 0; i < 8; i++ )
+	{
+		SPI_SCLK = 0U;
+		delay_us(1);
+		SPI_SCLK = 1U;
+		receive <<= 1; 
+		if(SPI_MISO) receive++;
+		delay_us(1);
+	}
+	return receive;
+}
+
+
+/**************************实现函数********************************************
+*函数原型:		uint8_t SPI_Write_Bytes(uint8_t reg, uint8_t length, uint8_t* data)
 *功　　能:	    将多个字节写入指定设备 指定寄存器
 *输入		dev  目标设备地址
 *		reg	  寄存器地址
@@ -102,32 +146,31 @@ void SPI_Stop(void)
 *返回   返回是否成功
 *******************************************************************************/ 
 
-uint8_t SPI_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t * data)
+uint8_t SPI_Write_Bytes(uint8_t reg, uint8_t length, uint8_t * data)
 {
 	uint16_t txd;
 	uint8_t i, j;
-	if(dev == ADNS3080_Address) SPI_Start();
+	SPI_Start();
 	for(j = 0; j < length; j++)
 	{
 		txd = ((uint16_t) (reg | 0x80) << 8) | data[i];
 		for(i = 0; i < 16; i++)
 		{
+			SPI_SCLK = 0U;
 			SPI_MOSI = (txd & 0x80) >> 15;
 			txd <<= 1;	  
 			delay_us(1);   
 			SPI_SCLK = 1U;
-			delay_us(1); 
-			SPI_SCLK = 0U;	
-			delay_us(1);
+			delay_us(1); 			
 		}
-		delay_us(5); // SPI time between write commands (1 + 1 + 1) * 16 + 5 = 53 > 50 us
+		delay_us(20); // SPI time between write commands (1 + 1) * 16 + 20 = 52 > 50 us
 	}
 	SPI_Stop();
 	return 1;
 }
 
 /**************************实现函数********************************************
-*函数原型:		uint8_t SPI_Write_Byte(uint8_t dev, uint8_t reg, uint8_t data)
+*函数原型:		uint8_t SPI_Write_Byte(uint8_t reg, uint8_t data)
 *功　　能:	    写入指定设备 指定寄存器一个字节
 *输入		dev  目标设备地址
 *		reg	   寄存器地址
@@ -135,54 +178,126 @@ uint8_t SPI_Write_Bytes(uint8_t dev, uint8_t reg, uint8_t length, uint8_t * data
 *返回   1
 *******************************************************************************/ 
 
-uint8_t SPI_Write_Byte(uint8_t dev, uint8_t reg, uint8_t length, uint8_t * data)
+uint8_t SPI_Write_Byte(uint8_t reg, uint8_t data)
 {
-	return SPI_Write_Bytes(dev, reg, 1, &data);
+	return SPI_Write_Bytes(reg, 1, &data);
 	return 1;	
 }
 
 
+
+
+
 /**************************实现函数********************************************
-*函数原型:		uint8_t SPI_Read_Byte(uint8_t dev, uint8_t reg, uint8_t length, uint8_t *data)
+*函数原型:		uint8_t SPI_Read_Byte(uint8_t reg)
+*功　　能:	    读取指定设备 指定寄存器
+*输入		dev  目标设备地址
+*		reg	  寄存器地址
+*返回   读出来的数
+*******************************************************************************/ 
+
+uint8_t SPI_Read_Byte(uint8_t reg)
+{
+	uint8_t txd;
+	uint8_t rxd;
+	SPI_Start();
+	txd = reg & (~ 0x80);
+	rxd = 0x00;
+	
+	SPI_Send_Byte(txd);
+
+	if(reg == 0x02) delay_us(63); // tSRAD >= 50 us for non-motion read; tSRAD-MOT >= 75 us for register 0x02
+		else delay_us(38);
+
+	rxd = SPI_Receive_Byte();
+	delay_us(1);
+	SPI_Stop();
+	return rxd;
+}
+
+
+/**************************实现函数********************************************
+*函数原型:		void SPI_Read_Bytes(uint8_t reg, uint8_t length, uint8_t *data)
 *功　　能:	    读取指定设备 指定寄存器的 length个值
 *输入		dev  目标设备地址
 *		reg	  寄存器地址
 *		length 要读的字节数
 *		*data  读出的数据将要存放的指针
-*返回   读出来的字节数量
 *******************************************************************************/ 
 
-uint8_t SPI_Read_Byte(uint8_t dev, uint8_t reg, uint8_t * data)
+void SPI_Read_Bytes(uint8_t reg, uint8_t length, uint8_t *data)
 {
-	uint8_t i, j;
+	uint8_t k;
 	uint8_t txd;
-	uint8_t rxd;
-	if(dev == ADNS3080_Address) SPI_Start();
+	SPI_Start();
 
 		txd = reg & (~ 0x80);
-		rxd = 0x00;
-		for(i = 0; i < 8; i++)
-		{
-			SPI_MOSI = (txd & 0x80) >> 7;
-			txd <<= 1;	  
-			delay_us(1);   
-			SPI_SCLK = 1U;
-			delay_us(1); 
-			SPI_SCLK = 0U;	
-			delay_us(1);
-		}
-		if(reg == 0x02) delay_us(55); // tSRAD >= 50 us for non-motion read; tSRAD-MOT >= 75 us for register 0x02
-		else delay_us(30);
+		for(k = 0; k < length; k++)
+		{			
+			SPI_Send_Byte(txd + k);
 
-		for(j = 0; j < 8; j++ )
-		{
-			SPI_SCLK = 0U;
-			delay_us(1);
-			SPI_SCLK = 1U;
-			rxd <<= 1; 
-			if(SPI_MISO) rxd++;
-			delay_us(1);
+			if((reg + k) == 0x02) delay_us(63); // tSRAD >= 50 us for non-motion read; tSRAD-MOT >= 75 us for register 0x02
+			else delay_us(38);
+
+			data[k] = SPI_Receive_Byte();
 		}
 	delay_us(1);
 	SPI_Stop();
+}
+
+/******************************************************************************
+* function :		void SPI_Burst_Mode_Read(uint8_t reg, uint16_t length, uint8_t * data)
+* Description : Burst mode is a special serial port operation mode 
+* which may be used to reduce the serial transaction time for three predefined operations:
+* motion read and SROM download and frame capture.
+* The speed improvement is achieved by continuous data clocking to 
+* or from multiple registers without the need to specify the register address,
+* and by not requiring the normal delay period between data bytes.
+*******************************************************************************/ 
+
+void SPI_Burst_Mode_Read(uint8_t reg, uint16_t length, uint8_t * data)
+{
+	uint16_t k;
+	uint8_t txd;
+
+	SPI_Start();
+	txd = reg & (~ 0x80);
+	SPI_Send_Byte(txd);
+	delay_us(63);
+
+	for(k = 0; k < length; k++)
+	{
+		data[k] = SPI_Receive_Byte();	
+	}
+	delay_us(1);
+	SPI_Stop();
+	delay_us(4); //Time NCS must be held high to exit burst mode
+}
+
+
+/******************************************************************************
+* function :		void SPI_Burst_Mode_Write(uint8_t reg, uint16_t length, uint8_t * data)
+* Description : Burst mode is a special serial port operation mode 
+* which may be used to reduce the serial transaction time for three predefined operations:
+* motion read and SROM download and frame capture.
+* The speed improvement is achieved by continuous data clocking to 
+* or from multiple registers without the need to specify the register address,
+* and by not requiring the normal delay period between data bytes.
+*******************************************************************************/ 
+
+void SPI_Burst_Mode_Write(uint8_t reg, uint16_t length, uint8_t * data)
+{
+	uint16_t k;
+	uint8_t txd;
+	SPI_Start();
+	txd = reg | 0x80;
+	SPI_Send_Byte(txd);
+	for(k = 0; k < length; k++)
+	{
+		txd = data[k];
+		SPI_Send_Byte(txd);
+	}
+	delay_us(1);
+	SPI_Stop();
+	delay_us(4); //Time NCS must be held high to exit burst mode
 }

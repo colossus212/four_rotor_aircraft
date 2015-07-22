@@ -6,9 +6,6 @@
 #define RtA 	57.324841        //  180/3.1415  	
 #define AtR    	0.0174533		//  1/RtA        
 
-
-
-
 struct _angle
 {
         float pitch;

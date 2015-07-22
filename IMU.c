@@ -1,11 +1,13 @@
 
 /**********************************************************************************
  * 文件名  ：IMU.c  
- * Version	: 2015.7.10 By DHP
+ * Version	: 2015.7.22 By DHP
  * Device(s)	: R5F100LE
  * Tool-Chain	: CA78K0R
  * Description	: 姿态解算
- * API		: void Get_Attitude()
+ * API		: 
+		  void Get_Attitude_DMP()
+		  void Get_Attitude()
 **********************************************************************************/
 
 #include "include.h"

@@ -1,24 +1,26 @@
 
 /************************************************
 * File Name	: MPU_6050.c
-* Version	: 2015.7.10 By DHP
+* Version	: 2015.7.22 By DHP
 * Device(s)	: R5F100LE
 * Tool-Chain	: CA78K0R
 * Description	: MPU6050
-* API		: void MPU6050_Init(void);	初始化 MPU6050 的寄存器,计算零偏
+* API		:
+		  #define MPU6050_Int P4.3
+
+		  void MPU6050_Init(void);	初始化 MPU6050 的寄存器,计算零偏
+		  uint8_t MPU6050_DMP_Initialize(void); //DMP初始化
+		  void DMP_Routing(void);	 //DMP 线程，主要用于读取和处理DMP的结果   [需要定时调用]
+		  void DMP_Get_YawPitchRoll(void);  //读取载体的姿态角
+
 		  void MPU6050_Read_RawData();  获得 MPU6050 的六个测量值，已经转换单位并减去零偏 输出角度值
 		  extern MPU6050_Struct MPU6050_data ;
-
 		  float Get_MPU6050_Ax();
 		  float Get_MPU6050_Ay();
-		  float Get_MPU6050_Az();
-		  
+		  float Get_MPU6050_Az();		  
 		  float Get_MPU6050_Gx();
 		  float Get_MPU6050_Gy();
 		  float Get_MPU6050_Gz();
-
-		  #define MPU6050_Int P4.3
-
 		  //void MPU6050_RawData_Average() 
 *************************************************************/
 
@@ -1391,11 +1393,10 @@ void DMP_Covert_Data(void)
 {
 	float  qtemp[4],norm ; // 四元数
   
-	// 注意，这里的计算原来是错误的，但因为 PID参数原因，暂时不改
-	//DMP_DATA.GYROx 即为直接的角度deg; 而非AD。  
-	DMP_DATA.dmp_gyrox = ((float)DMP_DATA.GYROx)/16.4f;	    //TOBE FIXED GYROx*M_PI_F/180.0f convert to rad/s
-	DMP_DATA.dmp_gyroy = ((float)DMP_DATA.GYROy)/16.4f;
-	DMP_DATA.dmp_gyroz = ((float)DMP_DATA.GYROz)/16.4f;
+	//DMP_DATA.GYROx 即为直接的角度deg。  
+	DMP_DATA.dmp_gyrox = ((float)DMP_DATA.GYROx);
+	DMP_DATA.dmp_gyroy = ((float)DMP_DATA.GYROy);
+	DMP_DATA.dmp_gyroz = ((float)DMP_DATA.GYROz);
 	//acc sensitivity to +/-    4 g
 	DMP_DATA.dmp_accx = (((float)DMP_DATA.ACCx)/DMP_ACC_SCALE)*ONE_G;	//加速度 转成单位： m/S^2
 	DMP_DATA.dmp_accy = (((float)DMP_DATA.ACCy)/DMP_ACC_SCALE)*ONE_G;
@@ -1433,7 +1434,8 @@ void DMP_Covert_Data(void)
 //读取载体的姿态角 数组的顺序 航向  俯仰  滚转
 void DMP_Get_YawPitchRoll()
 {
-	angle.yaw =   DMP_DATA.dmp_yaw;
+	//注意：前面计算反了，所以这里pitch 和 roll要反过来。
+	//angle.yaw =   DMP_DATA.dmp_yaw;
 	angle.pitch =  DMP_DATA.dmp_roll;
 	angle.roll =  DMP_DATA.dmp_pitch;
 }

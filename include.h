@@ -17,7 +17,7 @@
 #include "PID.h"
 #include "control.h"
 #include "KalmanFilter.h"
-//#include "SPI.h"
-//#include "ADNS_3080.h"
+#include "SPI.h"
+#include "ADNS_3080.h"
 
 #endif
