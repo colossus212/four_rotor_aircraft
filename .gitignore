@@ -51,6 +51,7 @@ Temporary Items
 *.lmp
 *.sym
 *.map
+*.lmf
 
 # cubesuite project file
 *.rel
