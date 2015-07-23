@@ -18,6 +18,7 @@
 
 #include "SPI.h"
 #include "r_cg_port.h"
+#include "delay.h"
 
 #define SPI_SCLK P5.3
 #define SPI_MOSI P5.4
@@ -89,8 +90,7 @@ void SPI_Start(void)
 *******************************************************************************/
 
 void SPI_Stop(void)
-{	
-	SPI_SCLK = 0U;
+{
 	delay_us(1); //From last SCLK falling edge to NCS rising edge,  for valid MISO data transfer need 120 ns
 	SPI_NCS = 1U;
 	delay_us(1);
@@ -158,10 +158,10 @@ uint8_t SPI_Write_Bytes(uint8_t reg, uint8_t length, uint8_t * data)
 		{
 			SPI_SCLK = 0U;
 			SPI_MOSI = (txd & 0x80) >> 15;
-			txd <<= 1;	  
-			delay_us(1);   
+			txd <<= 1;
+			delay_us(1);
 			SPI_SCLK = 1U;
-			delay_us(1); 			
+			delay_us(1);
 		}
 		delay_us(20); // SPI time between write commands (1 + 1) * 16 + 20 = 52 > 50 us
 	}
@@ -181,7 +181,7 @@ uint8_t SPI_Write_Bytes(uint8_t reg, uint8_t length, uint8_t * data)
 uint8_t SPI_Write_Byte(uint8_t reg, uint8_t data)
 {
 	return SPI_Write_Bytes(reg, 1, &data);
-	return 1;	
+	return 1;
 }
 
 
@@ -236,7 +236,8 @@ void SPI_Read_Bytes(uint8_t reg, uint8_t length, uint8_t *data)
 		{			
 			SPI_Send_Byte(txd + k);
 
-			if((reg + k) == 0x02) delay_us(63); // tSRAD >= 50 us for non-motion read; tSRAD-MOT >= 75 us for register 0x02
+			// tSRAD >= 50 us for non-motion read; tSRAD-MOT >= 75 us for register 0x02
+			if((reg + k) == 0x02) delay_us(63); 
 			else delay_us(38);
 
 			data[k] = SPI_Receive_Byte();

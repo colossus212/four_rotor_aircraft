@@ -23,7 +23,7 @@
 #define MOTO3_duty TDR03
 #define MOTO4_duty TDR04
 
-#define MOTO_Max 6000  // test percent: 6000 / 50000 = 12 %
+#define MOTO_Max 8000  // test percent: 8000 / 50000 = 16 %
 float MOTO_PWM_ZeroOffset;
 float MOTO_PWM_RatioOffset;
 
@@ -52,7 +52,7 @@ void Motor_Init()
 	
 ***********************************************/
 
-void Motor_RateFlash(int16_t MOTO1, int16_t MOTO2, int16_t MOTO3, int16_t MOTO4)
+void Motor_RateFlash(float MOTO1, float MOTO2, float MOTO3, float MOTO4)
 {	
 	// ·ÀÖ¹ MOTO ³¬³ö·¶Î§
 	

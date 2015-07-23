@@ -1,8 +1,7 @@
-#ifndef _SPI_
-#define _SPI_
-
 #include "r_cg_macrodriver.h"
 
+#ifndef _SPI_
+#define _SPI_
 
 #define ADNS3080_Address 0x17
 

@@ -5,6 +5,6 @@
 
 
 void Motor_Init();
-void Motor_RateFlash(int16_t MOTO1, int16_t MOTO2, int16_t MOTO3, int16_t MOTO4);
+void Motor_RateFlash(float MOTO1, float MOTO2, float MOTO3, float MOTO4);
 
 #endif

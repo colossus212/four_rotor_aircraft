@@ -62,7 +62,7 @@
 
 
 uint8_t Fly_flag;
-volatile int16_t MOTO1 = 0, MOTO2 = 0, MOTO3 = 0, MOTO4 = 0;
+volatile float MOTO1 = 0, MOTO2 = 0, MOTO3 = 0, MOTO4 = 0;
 
 
 /****************************************姿态控制********************************************/
@@ -117,8 +117,10 @@ void Control_Posture(float roll, float pitch, float yaw)
 void Control_Heigh(float H)		//期望值,单位cm
 {
 	//static int j = 0;
+	float AccH;
 	float height = Get_Height();   //height是从超声波得到的数据
-
+	height = height / sqrt(tan(angle.pitch * AtR) * tan(angle.pitch * AtR) + tan(angle.roll * AtR) * tan(angle.roll * AtR) + 1);
+	
 	//if(j >= 2)  //core 2   shell1  
 	//{
 		//*********外环高度PID***************//		
@@ -127,7 +129,8 @@ void Control_Heigh(float H)		//期望值,单位cm
 	//}
 	//j ++;	
 		//*******内环(加速度环)PID***********//
-	PID_Position( & alt_vel_PID, alt_PID.output, DMP_DATA.dmp_accz * 100 );
+	AccH = sqrt(DMP_DATA.dmp_accx * DMP_DATA.dmp_accx + DMP_DATA.dmp_accy * DMP_DATA.dmp_accy + DMP_DATA.dmp_accz * DMP_DATA.dmp_accz); 
+	PID_Position( & alt_vel_PID, alt_PID.output, (AccH - 8.82)* 100 );
 
 	/********************************油门控制******************************************/
 
