@@ -8,17 +8,26 @@
 		  void ADNS3080_Init();
 		  void ADNS3080_Motion_Read();
 		  void ADNS3080_SROM_Download();
-		  void ADNS3080_Frame_Capture(uint8_t * data);
+		  void ADNS3080_Frame_Capture();
+		  
+		  #define SPI_SCLK P5.2  // pin 35
+		  #define SPI_MOSI P5.4  // pin 37
+		  #define SPI_MISO P1.5  // pin 41
+		  #define SPI_NCS P1.0   // pin 46
 		 		
 *************************************************************************/
 
 #include "ADNS_3080.h"
 #include "SPI.h"
 #include "delay.h"
+#include "r_cg_port.h"
+
+#define ADNS3080_NPD P6.0  // pin 17
+#define ADNS3080_RST P6.1  // pin 18
 
 uint8_t Data_Out_Upper, Data_Out_Lower;
-
-uint16_t Frame_Period;
+uint8_t Motion, Delta_X, Delta_Y, SQUAL, Shutter_Upper, Shutter_Lower, Maximum_Pixel;
+uint16_t Frame_Period = 0;
 /******************************************************************************
 * function :		void ADNS3080_Read_Frame_Period()
 * Description : Read these registers to determine the current frame period 
@@ -35,29 +44,85 @@ void ADNS3080_Read_Frame_Period()
 	uint8_t Frame_Period_Lower, Frame_Period_Upper;
 	Frame_Period_Lower = SPI_Read_Byte(ADNS3080_RA_Frame_Period_Lower);
 	Frame_Period_Upper = SPI_Read_Byte(ADNS3080_RA_Frame_Period_Upper);
-	Frame_Period = (uint16_t)Frame_Period_Upper << 8 + Frame_Period_Lower;
-	if(Frame_Period == 0x0e7e) Frame_Period = 155; // = 1000 / 6.469
-	if(Frame_Period == 0x12c0) Frame_Period = 200; // = 1000 / 5
-	if(Frame_Period == 0x1f40) Frame_Period = 334; // = 1000 / 3
-	if(Frame_Period == 0x2ee0) Frame_Period = 500; // = 1000 / 2
+	Frame_Period = (uint16_t)Frame_Period_Upper << 8 | Frame_Period_Lower;
+	Frame_Period = Frame_Period / 24 + 1;
+	//if(Frame_Period == 0x0e7e) Frame_Period = 155; // = 1000 / 6.469
+	//if(Frame_Period == 0x12c0) Frame_Period = 200; // = 1000 / 5
+	//if(Frame_Period == 0x1f40) Frame_Period = 334; // = 1000 / 3
+	//if(Frame_Period == 0x2ee0) Frame_Period = 500; // = 1000 / 2
 }
+
+/******************************************************************************
+* function :		void ADNS3080_Power_High()
+* Description : 
+*******************************************************************************/ 
+void ADNS3080_Power_High()
+{
+	PM6 &= ~(_01_PMn0_MODE_INPUT);
+	ADNS3080_NPD = 1U;
+	delay_ms(1);
+	//Wake from NPD: tPUPD = 75 ms
+		//From NPD rising edge to valid motion data 
+		//at 2000 fps and shutter bound 8290. 
+		//Max assumes surface change while NPD is low.
+	//Data delay after NPD: tCOMPUTE 3.1 ms
+		//From NPD rising edge to all registers
+		//contain data from new images at 2000fps
+}
+
+/******************************************************************************
+* function :		void ADNS3080_Power_Down()
+* Description : 
+*******************************************************************************/ 
+void ADNS3080_Power_Down()
+{
+	PM6 &= ~(_01_PMn0_MODE_INPUT);
+	ADNS3080_NPD = 0U;
+	//tPD 2.1 ms
+	//From NPD falling edge to initiate the power down cycle at 500fps 
+	//(tpd = 1 frame period + 100ms )
+}
+
+/******************************************************************************
+* function :		void ADNS3080_Reset_High()
+* Description : 
+*******************************************************************************/
+void ADNS3080_Reset_High()
+{
+	PM6 &= ~(_02_PMn1_MODE_INPUT);
+	ADNS3080_RST = 1;
+}
+
+
+uint8_t ADNS3080_Product_ID;
 /******************************************************************************
 * function :		void ADNS3080_Init()
 * Description : 
 *******************************************************************************/ 
-
 void ADNS3080_Init()
 {
+	
+	ADNS3080_Power_High();
+	//ADNS3080_Reset_High();
+	ADNS3080_Product_ID = SPI_Read_Byte(ADNS3080_RA_Product_ID);
 	ADNS3080_Read_Frame_Period();
+	//Motion = SPI_Read_Byte(ADNS3080_RA_Motion_Burst); // test
 }
 
 
 void ADNS3080_Reset()
 {
-
+	ADNS3080_RST = 0;
+	//RESET pulse width: tPW-RESET = 10 us
+	delay_us(11);
+	ADNS3080_RST = 1;
+	//From RESET falling edge to valid motion data at 2000 fps and shutter bound 8290 need 35 ms
+	//From RESET falling edge to inputs active (NPD, MOSI, NCS, SCLK) need 500 us
+	delay_us(500);
+	
 }
 
-uint8_t Motion, Delta_X, Delta_Y, SQUAL, Shutter_Upper, Shutter_Lower, Maximum_Pixel;
+
 
 /******************************************************************************
 * function :		void ADNS3080_Motion_Read(uint8_t * data)
@@ -224,7 +289,6 @@ void ADNS3080_SROM_Download()
 {
 		//Perform hardware reset by toggling the RESET pin
 	ADNS3080_Reset();
-
 		//Write 0x44 to register 0x20
 	SPI_Write_Byte(0x20, 0x44);
 		//Write 0x07 to register 0x23
@@ -232,7 +296,7 @@ void ADNS3080_SROM_Download()
 		//Write 0x88 to register 0x24
 	SPI_Write_Byte(0x24, 0x88);
 		//Wait at least 1 frame period
-		//delay_us(600);
+			//delay_us(600);
 	delay_us(Frame_Period + 10);
 
 		//Write 0x18 to register 0x14 (SROM_Enable register)
@@ -260,36 +324,56 @@ void ADNS3080_SROM_Download()
 
 
 /******************************************************************************
-* function :		void ADNS3080_Frame_Capture(uint8_t * data)
+* function :		void ADNS3080_Frame_Capture()
 * Description : This is a fast way to download a full array of pixel values from a single frame.
 * This mode disables navigation and overwrites any downloaded firmware.
 * A hardware reset is required to restore navigation,
 * and the firmware must be reloaded afterwards if required.
 *******************************************************************************/
-uint8_t Frame_Data[30][30];
+//uint8_t Frame_Data[30][30];
+uint8_t Frame_Data[900];
 uint8_t Frame_Data_Correct = 0;
 
-void ADNS3080_Frame_Capture(uint8_t * data)
+void ADNS3080_Frame_Capture()
 {
 		// Writing 0x83 to Frame_Capture register will cause the next available complete
 		// 1 and 2/3 frames of pixel values to be stored to SROM RAM. 
 	SPI_Write_Byte(ADNS3080_RA_Frame_Capture, 0x83);
 		//tCAPTURE = 10us + 3 frame periods
 	delay_us(10 + 3 * Frame_Period);
+
+	SPI_Burst_Mode_Read(ADNS3080_RA_Pixel_Burst, 900, Frame_Data);
 		//The first pixel of the frame will have bit 6 set to 1. (The second frame also) 
 		//All other bytes have bit 6 set to zero.
-	SPI_Burst_Mode_Read(ADNS3080_RA_Pixel_Burst, 900, Frame_Data);
-	if( ((Frame_Data[0][0]) & 0x40) == 1) Frame_Data_Correct = 1;
 	ADNS3080_Frame_Data_Correct();
 }
 
 void ADNS3080_Frame_Data_Correct()
 {
-	uint8_t i, j;
+	//uint8_t i, j;
+	uint16_t i;
+
+	if( ((Frame_Data[0]) & 0x40) == 0x40) 
+		Frame_Data_Correct = 1;
+		else Frame_Data_Correct = 0;
+	//if( ((Frame_Data[0][0]) & 0x40) == 0x40) 
+	//	Frame_Data_Correct = 1;
+	//	else Frame_Data_Correct = 0;
+	//for(i = 0; i < 30; i++)
+	//	for(j = 0; j < 30; j++)
+	//		{
+	//			if( ((Frame_Data[i][j]) & 0x40) == 0x40) Frame_Data_Correct = 1;
+	//		}
+	
 	if(Frame_Data_Correct == 0)
 	{
-		for(i = 0; i < 30; i++)
-			for(j = 0; j < 30; j++)
-				Frame_Data[i][j] = 0;
+		for(i = 0; i < 900; i++)
+				Frame_Data[i] = 0;
 	}
+	//if(Frame_Data_Correct == 0)
+	//{
+	//	for(i = 0; i < 30; i++)
+	//		for(j = 0; j < 30; j++)
+	//			Frame_Data[i][j] = 0;
+	//}
 }

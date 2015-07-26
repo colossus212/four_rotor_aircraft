@@ -8,7 +8,7 @@
 void ADNS3080_Init();
 void ADNS3080_Motion_Read();
 void ADNS3080_SROM_Download();
-void ADNS3080_Frame_Capture(uint8_t * data);
+void ADNS3080_Frame_Capture();
 void ADNS3080_Frame_Data_Correct();
 
 #define	ADNS3080_RA_Product_ID	0x00

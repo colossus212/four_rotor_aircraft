@@ -19,5 +19,6 @@
 #include "KalmanFilter.h"
 #include "SPI.h"
 #include "ADNS_3080.h"
+#include "AHRS_Captain_Flight.h"
 
 #endif

@@ -11,19 +11,28 @@
 #include "include.h"
 #include  <math.h>
 
+#define MOTO_MAX 10000
+#define MOTO_MIN 0
 
 #if 0
 //r_cg_timer_user.c中 __interrupt static void r_tau0_channel5_interrupt(void)的备份
 	//中断控制：
-	//uint8_t Buf[20];
-
+	//uint16_t height, tempr = 0, press = 0, IMUpersec = 100;
 	//if(Count_for_Height == 8)
 	//{
 	//	Flash_Height();
-	//	Buf[6] = ((int16_t) Get_Height()) >> 8;
-	//	Buf[7] = ((int16_t) Get_Height()) & 0x00ff;
 	//	Control_Heigh(170);
 	//	Count_for_Height = 0;
+	//	AHRS_Captain_Flight_IMU(angle.yaw, angle.pitch, angle.roll, height, tempr, press, IMUpersec);
+	//	R_UART0_Send(Uart_Buf_IMU, 18);
+	//}
+	//
+	//if(Count_for_Height == 4)
+	//{
+	//	AHRS_Captain_Flight_Motion(DMP_DATA.dmp_accx, DMP_DATA.dmp_accy, DMP_DATA.dmp_accz,
+	//		DMP_DATA.dmp_gyrox , DMP_DATA.dmp_gyroy, DMP_DATA.dmp_gyroz, X_HMC, Y_HMC, Z_HMC);
+
+	//	R_UART0_Send(Uart_Buf_Motion, 24);
 	//}
 	//
 	//if(Count_for_Height == 0)
@@ -31,30 +40,14 @@
 	//	Flash_Height_Prepare();
 	//}
 	//
-	// //Get_Attitude();  // haven't use DMP
+	////Get_Attitude();  // haven't use DMP
 
-	// // Get DMP data and fix yaw
+	//// Get DMP data and fix yaw
 	//DMP_Routing();
 	//DMP_Get_YawPitchRoll();
 	//Get_Attitude_DMP();
 	//
-	//	Buf[0] = ((int16_t) angle.yaw) >> 8;
-	//	Buf[1] = ((int16_t) angle.yaw) & 0x00ff;
-	//	Buf[2] = ((int16_t) angle.roll) >> 8;
-	//	Buf[3] = ((int16_t) angle.roll) & 0x00ff;
-	//	Buf[4] = ((int16_t) angle.pitch) >> 8;
-	//	Buf[5] = ((int16_t) angle.pitch) & 0x00ff;
-
-	//	//Buf[8] = ((int16_t) MOTO1) >> 8;
-	//	//Buf[9] = ((int16_t) MOTO1) & 0x00ff;
-	//	//Buf[10] = ((int16_t) MOTO2) >> 8;
-	//	//Buf[11] = ((int16_t) MOTO2) & 0x00ff;
-	//	//Buf[12] = ((int16_t) MOTO3) >> 8;
-	//	//Buf[13] = ((int16_t) MOTO3) & 0x00ff;
-	//	//Buf[14] = ((int16_t) MOTO4) >> 8;
-	//	//Buf[15] = ((int16_t) MOTO4) & 0x00ff;
-
-	//	R_UART0_Send(Buf, 8);
+	//height = Get_Height();	
 
 	//Control_Posture(0, 0, 0);
 	//Count_for_Height++;
@@ -106,6 +99,16 @@ void Control_Posture(float roll, float pitch, float yaw)
 		MOTO2 += + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output;
 		MOTO3 += + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output;
 		MOTO4 += - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output;
+		
+		if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX - 1;
+		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX - 1;
+		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX - 1;
+		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX - 1;
+
+		if(MOTO1 <= MOTO_MIN) MOTO1 = MOTO_MIN;
+		if(MOTO2 <= MOTO_MIN) MOTO2 = MOTO_MIN;
+		if(MOTO3 <= MOTO_MIN) MOTO3 = MOTO_MIN;
+		if(MOTO4 <= MOTO_MIN) MOTO4 = MOTO_MIN;
 
 	if(Fly_flag == 1) Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
 	else    Motor_RateFlash(0, 0, 0, 0);
@@ -138,6 +141,16 @@ void Control_Heigh(float H)		//期望值,单位cm
 		MOTO2 += alt_vel_PID.output;
 		MOTO3 += alt_vel_PID.output;
 		MOTO4 += alt_vel_PID.output;
+		
+//		if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX - 1;
+//		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX - 1;
+//		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX - 1;
+//		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX - 1;
+
+		if(MOTO1 <= MOTO_MIN) MOTO1 = MOTO_MIN;
+		if(MOTO2 <= MOTO_MIN) MOTO2 = MOTO_MIN;
+		if(MOTO3 <= MOTO_MIN) MOTO3 = MOTO_MIN;
+		if(MOTO4 <= MOTO_MIN) MOTO4 = MOTO_MIN;
 
 	if(Fly_flag == 1) Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
 	else    Motor_RateFlash(0, 0, 0, 0);

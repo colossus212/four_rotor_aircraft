@@ -5,6 +5,8 @@
 
 #define ADNS3080_Address 0x17
 
+void SPI_Init(void);
+
 uint8_t SPI_Write_Bytes(uint8_t reg, uint8_t length, uint8_t * data);
 uint8_t SPI_Write_Byte(uint8_t reg, uint8_t data);
 

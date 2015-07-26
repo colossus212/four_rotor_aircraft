@@ -23,7 +23,7 @@
 #define MOTO3_duty TDR03
 #define MOTO4_duty TDR04
 
-#define MOTO_Max 8000  // test percent: 8000 / 50000 = 16 %
+#define MOTO_Max 20000  // test percent: 20000 / 50000 = 40 %
 float MOTO_PWM_ZeroOffset;
 float MOTO_PWM_RatioOffset;
 
