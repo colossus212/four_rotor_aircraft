@@ -11,7 +11,17 @@
 		  void MPU6050_Init(void);	初始化 MPU6050 的寄存器,计算零偏
 		  uint8_t MPU6050_DMP_Initialize(void); //DMP初始化
 		  void DMP_Routing(void);	 //DMP 线程，主要用于读取和处理DMP的结果   [需要定时调用]
-		  void DMP_Get_YawPitchRoll(void);  //读取载体的姿态角
+		  
+		  float Get_DMP_Gyro_x();
+		  float Get_DMP_Gyro_y();
+		  float Get_DMP_Gyro_z();
+		  float Get_DMP_Acc_x();
+		  float Get_DMP_Acc_y();
+		  float Get_DMP_Acc_z();
+		  float Get_DMP_qw();
+		  float Get_DMP_qx();
+		  float Get_DMP_qy();
+		  float Get_DMP_qz();
 
 		  void MPU6050_Read_RawData();  获得 MPU6050 的六个测量值，已经转换单位并减去零偏 输出角度值
 		  extern MPU6050_Struct MPU6050_data ;
@@ -26,14 +36,14 @@
 
 #include "include.h"
 #include "math.h"
-#define isnan(x)    ((x) != (x))
+
 
 #define MPU6050_Int P4.3
 
 
 MPU6050_Struct MPU6050_data;
 
-const float pi = 3.1415926;
+const static float pi = 3.1415926;
 
 float AcceRatio;   
 float GyroRatio;
@@ -1115,30 +1125,30 @@ uint8_t MPU6050_DMP_Initialize(void)
 	uint8_t fifoBuffer[128];
 	int8_t xgOffset	, ygOffset , zgOffset;
 	
-    // reset device
-    //printf(("\r\n=======配置DMP引擎=========\r\n"));
-    //printf(("复位MPU6050...\r\n"));
+    	// reset device
+    	//======配置DMP引擎=========
+    	//复位MPU6050.
     MPU6050_Reset();
     delay_ms(50); // wait after reset 50ms
-    //printf(("禁止休眠模式...\r\n"));
+  	  //禁止休眠模式.
     MPU6050_Set_Sleep_Enabled(0);
-    //printf(("\r\n读取MPU6050硬件版本...\r\n"));
-    //printf(("正在选择用户内存块...\r\n"));
+ 	   //读取MPU6050硬件版本.
+ 	   //正在选择用户内存块.
     MPU6050_Set_Memory_Bank(0x10, 1, 1);
-    //printf(("正在选择用户内存字节...\r\n"));
+ 	   //printf(("正在选择用户内存字节...\r\n"));
     MPU6050_Set_Memory_Start_Address(0x06);
-    //printf(("正在检查硬件版本...\r\n"));
+	    //printf(("正在检查硬件版本...\r\n"));
     MPU6050_Read_Memory_Byte();
-    ////printf(("Revision @ user[16][6] = \r\n"));
-    //printf(("复位内存块...\r\n"));
+   	 ////printf(("Revision @ user[16][6] = \r\n"));
+   	 //printf(("复位内存块...\r\n"));
     MPU6050_Set_Memory_Bank(0, 0, 0);
-    // check OTP bank valid
-    //printf(("读取OTP块有效标志...\r\n"));
+ 	   // check OTP bank valid
+ 	   //printf(("读取OTP块有效标志...\r\n"));
     MPU6050_Get_OTP_Bank_Valid();
-//     //printf("OTP bank is ");
-//     //printf(otpValid ? ("valid!") : ("invalid!"));
-    // get X/Y/Z gyro offsets
-    //printf(("读取加速度偏移值...\r\n"));
+	//     //printf("OTP bank is ");
+	//     //printf(otpValid ? ("valid!") : ("invalid!"));
+    	// get X/Y/Z gyro offsets
+    	//printf(("读取加速度偏移值...\r\n"));
     xgOffset = MPU6050_Get_XGyro_Offset_TC();
     ygOffset = MPU6050_Get_YGyro_Offset_TC();
     zgOffset = MPU6050_Get_ZGyro_Offset_TC(); 
@@ -1146,47 +1156,47 @@ uint8_t MPU6050_DMP_Initialize(void)
   	
 
 	// setup weird slave stuff (?)
-    //printf(("设置从器件地址为0x7F...\r\n"));
+    	//printf(("设置从器件地址为0x7F...\r\n"));
     MPU6050_Set_Slave_Address(0, 0x7F);
-    //printf(("禁止IIC主器件模式...\r\n"));
+   	 //printf(("禁止IIC主器件模式...\r\n"));
     MPU6050_Set_I2C_Master_Mode_Enabled(0);
-    //主控制器的I2C与	MPU6050的AUXI2C	直通。控制器可以直接访问HMC5883L
+  	  //主控制器的I2C与	MPU6050的AUXI2C	直通。控制器可以直接访问HMC5883L
     MPU6050_Set_I2C_Bypass_Enabled(1);	     
-    //printf(("设置从器件地址为0x68...\r\n"));
+   	 //printf(("设置从器件地址为0x68...\r\n"));
     MPU6050_Set_Slave_Address(0, 0x68);
-    //printf(("复位IIC主器件控制权...\r\n"));
+   	 //printf(("复位IIC主器件控制权...\r\n"));
     MPU6050_Reset_I2C_Master();
     delay_ms(20);
 
-    // load DMP code into memory banks
-    //printf(("正在写入DMP代码段到MPU6050 \r\n"));
+   	 // load DMP code into memory banks
+   	 //printf(("正在写入DMP代码段到MPU6050 \r\n"));
     if (MPU6050_Write_Prog_Memory_Block(dmpMemory, MPU6050_DMP_CODE_SIZE, 0, 0, 1)) 
     {
-        //printf(("DMP代码写入校验成功...\r\n"));
-        //printf(("配置DMP和有关设置...\r\n"));
-        // write DMP configuration
-         //printf(("正在写入DMP配置代码到MPU6050内存...\r\n"));
+    	    //printf(("DMP代码写入校验成功...\r\n"));
+    	    //printf(("配置DMP和有关设置...\r\n"));
+   	     // write DMP configuration
+   	      //printf(("正在写入DMP配置代码到MPU6050内存...\r\n"));
         if (MPU6050_Write_Prog_DMP_Configuration_Set(dmpConfig, MPU6050_DMP_CONFIG_SIZE)) 
 	{
-            //printf(("DMP配置代码写入校验成功\r\n"));
-            //printf(("设置Z轴角速度时钟源...\r\n"));
+      	      //printf(("DMP配置代码写入校验成功\r\n"));
+     	       //printf(("设置Z轴角速度时钟源...\r\n"));
             MPU6050_Set_Clock_Source(MPU6050_CLOCK_PLL_ZGYRO);
-            //printf(("使能DMP引擎和FIFO中断...\r\n"));
+    	        //printf(("使能DMP引擎和FIFO中断...\r\n"));
             MPU6050_Set_Int_Enabled(0x12);
-            //printf(("设置DMP采样率为200Hz...\r\n"));
+          	//printf(("设置DMP采样率为200Hz...\r\n"));
             MPU6050_Set_Rate(4); // 1khz / (1 + 4) = 200 Hz
-            //printf(("设置外部同步帧到TEMP_OUT_L[0]...\r\n"));
+        	//printf(("设置外部同步帧到TEMP_OUT_L[0]...\r\n"));
             MPU6050_Set_External_Frame_Sync(MPU6050_EXT_SYNC_TEMP_OUT_L);
-            //printf(("设置DLPF带宽为42Hz...\r\n"));
+       	     	//printf(("设置DLPF带宽为42Hz...\r\n"));
             MPU6050_Set_DLPF_Mode(MPU6050_DLPF_BW_42);
-            //printf(("设置角速度精度为 +/- 2000 deg/sec...\r\n"));
+            	//printf(("设置角速度精度为 +/- 2000 deg/sec...\r\n"));
             MPU6050_Set_Gyro_Range(MPU6050_GYRO_FS_2000);
-            //printf(("设置DMP配置字节...\r\n"));
+            	//printf(("设置DMP配置字节...\r\n"));
             MPU6050_Set_DMP_Config1(0x03);
             MPU6050_Set_DMP_Config2(0x00);
-            //printf(("清楚OTP块标志...\r\n"));
+           	//printf(("清楚OTP块标志...\r\n"));
             MPU6050_Set_OTP_Bank_Valid(0);
-            //printf(("设置X/Y/Z轴角速度为先前值...\r\n"));
+            	//printf(("设置X/Y/Z轴角速度为先前值...\r\n"));
             MPU6050_Set_XGyro_Offset_TC(xgOffset);
             MPU6050_Set_YGyro_Offset_TC(ygOffset);
             MPU6050_Set_ZGyro_Offset_TC(zgOffset);
@@ -1308,134 +1318,64 @@ void DMP_Routing(void)
 					ptr[i]   = fifoBuffer[i+1];  //数据大小端的处理。
 					ptr[i+1] = fifoBuffer[i];
 				}
-				DMP_Covert_Data(); //将FIFO的数据进行转换，并解出载体的三个姿态角
 			}	
 }
 
-// Fast inverse square-root	   快速计算 1/Sqrt(x) 		   
-float dmpinvSqrt(float x) 
+
+const float gyro_max = 2000;
+	//DMP_DATA.GYROx 即为直接的角度deg
+float Get_DMP_Gyro_x()
 {
-	float halfx = 0.5f * x;
-	float y = x;
-	long i = *(long*)&y;
-	i = 0x5f3759df - (i>>1);
-	y = *(float*)&i;
-	y = y * (1.5f - (halfx * y * y));
-	return y;
+	if(DMP_DATA.GYROx > gyro_max) DMP_DATA.GYROx = 0;
+	if(DMP_DATA.GYROx < - gyro_max) DMP_DATA.GYROx = 0;
+	return ((float)DMP_DATA.GYROx);
 }
 
-// a varient of asin() that checks the input ranges and ensures a
-// valid angle as output. If nan is given as input then zero is
-// returned.
-float dmpsafe_asin(float v)
+float Get_DMP_Gyro_y()
 {
-	if (isnan(v)) 
-	{
-		return 0.0;
-	}
-	if (v >= 1.0)
-	{
-		return pi/2;
-	}
-	if (v <= -1.0) 
-	{
-		return -pi/2;
-	}
-	return asin(v);
+	if(DMP_DATA.GYROy > gyro_max) DMP_DATA.GYROy = 0;
+	if(DMP_DATA.GYROy < - gyro_max) DMP_DATA.GYROy = 0;
+	return ((float)DMP_DATA.GYROy);
 }
 
-//将从DMP读取到的FIFO数据 进行转换，得到载体的姿态角。并把传感器的ADC值转成标准单位。
-
-// void DMP_Covert_Data(void)
-// {
-// 	volatile float q[4] , norm ; // 四元数
-
-//   DMP_DATA.dmp_gyrox = ((float)DMP_DATA.GYROx)/16.4f;	//角速度 转成单位：rad/s
-// 	DMP_DATA.dmp_gyroy = ((float)DMP_DATA.GYROy)/16.4f;
-// 	DMP_DATA.dmp_gyroz = ((float)DMP_DATA.GYROz)/16.4f;
-//   
-// 	//acc sensitivity to +/-    4 g
-// 	DMP_DATA.dmp_accx = (((float)DMP_DATA.ACCx)/8192.0f)*g;	//加速度 转成单位： m/S^2
-// 	DMP_DATA.dmp_accy = (((float)DMP_DATA.ACCy)/8192.0f)*g;
-// 	DMP_DATA.dmp_accz = (((float)DMP_DATA.ACCz)/8192.0f)*g;
-
-// 	  q[0] = (float)DMP_DATA.qw; 	//提取DMP的四元数
-//   	q[1] = (float)DMP_DATA.qx;
-//   	q[2] = (float)DMP_DATA.qy;
-//   	q[3] = (float)DMP_DATA.qz;
-// 	// 四元数归一化
-// 	norm = dmpinvSqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
-// 	q[0] = q[0] * norm;
-// 	q[1] = q[1] * norm;
-// 	q[2] = q[2] * norm;
-// 	q[3] = q[3] * norm;
-// 	
-// 	DMP_DATA.dmp_roll = (atan2(2.0*(q[0]*q[1] + q[2]*q[3]),
-// 	                       1 - 2.0*(q[1]*q[1] + q[2]*q[2])))* 180/M_PI;
-// 	 // we let safe_asin() handle the singularities near 90/-90 in pitch
-// 	DMP_DATA.dmp_pitch = dmpsafe_asin(2.0*(q[0]*q[2] - q[3]*q[1]))* 180/M_PI;
-
-// 	DMP_DATA.dmp_yaw = -atan2(2.0*(q[0]*q[3] + q[1]*q[2]),
-// 	                     1 - 2.0*(q[2]*q[2] + q[3]*q[3]))* 180/M_PI;
-// }
-
-
-float q[4];
-
-float gyrox_val=0;
-float gyroy_val=0;
-
-float gyroxGloble = 0;
-float gyroyGloble = 0;
-
-
-void DMP_Covert_Data(void)
+float Get_DMP_Gyro_z()
 {
-	float  qtemp[4],norm ; // 四元数
-  
-	//DMP_DATA.GYROx 即为直接的角度deg。  
-	DMP_DATA.dmp_gyrox = ((float)DMP_DATA.GYROx);
-	DMP_DATA.dmp_gyroy = ((float)DMP_DATA.GYROy);
-	DMP_DATA.dmp_gyroz = ((float)DMP_DATA.GYROz);
-	//acc sensitivity to +/-    4 g
-	DMP_DATA.dmp_accx = (((float)DMP_DATA.ACCx)/DMP_ACC_SCALE)*ONE_G;	//加速度 转成单位： m/S^2
-	DMP_DATA.dmp_accy = (((float)DMP_DATA.ACCy)/DMP_ACC_SCALE)*ONE_G;
-	DMP_DATA.dmp_accz = (((float)DMP_DATA.ACCz)/DMP_ACC_SCALE)*ONE_G;
-  
-	qtemp[0] = (float)DMP_DATA.qw; 	//提取DMP的四元数
-	qtemp[1] = (float)DMP_DATA.qx;
-	qtemp[2] = (float)DMP_DATA.qy;
-	qtemp[3] = (float)DMP_DATA.qz;
-	// 四元数归一化
-	norm = dmpinvSqrt(qtemp[0]*qtemp[0] + qtemp[1]*qtemp[1] + qtemp[2]*qtemp[2] + qtemp[3]*qtemp[3]);
-	q[0] = qtemp[0] * norm;
-	q[1] = qtemp[1] * norm;
-	q[2] = qtemp[2] * norm;
-	q[3] = qtemp[3] * norm;
-	
-	DMP_DATA.dmp_roll = (atan2(2.0*(q[0]*q[1] + q[2]*q[3]),
-	                       1 - 2.0*(q[1]*q[1] + q[2]*q[2])))* 180/pi;
-	 // we let safe_asin() handle the singularities near 90/-90 in pitch
-	DMP_DATA.dmp_pitch = dmpsafe_asin(2.0*(q[0]*q[2] - q[3]*q[1]))* 180/pi;
-	//注意：此处计算反了，非右手系。
-	DMP_DATA.dmp_yaw = -atan2(2.0*(q[0]*q[3] + q[1]*q[2]),
-	                     1 - 2.0*(q[2]*q[2] + q[3]*q[3]))* 180/pi;
-  //#ifdef YAW_CORRECT
-	DMP_DATA.dmp_yaw=-DMP_DATA.dmp_yaw;
-	//#endif
-  gyroxGloble=0.0f*gyrox_val+1.0f*(float)DMP_DATA.GYROx;
-  gyrox_val=gyroxGloble;
-  
-  gyroyGloble=0.0f*gyroy_val+1.0f*(float)DMP_DATA.GYROy;
-  gyroy_val=gyroyGloble;
-
+	if(DMP_DATA.GYROz > gyro_max) DMP_DATA.GYROz = 0;
+	if(DMP_DATA.GYROz < - gyro_max) DMP_DATA.GYROz = 0;
+	return ((float)DMP_DATA.GYROz);
 }
 
-//读取载体的姿态角 数组的顺序 航向  俯仰  滚转
-void DMP_Get_YawPitchRoll()
+float Get_DMP_Acc_x()
 {
-	//注意：前面计算反了，所以这里pitch 和 roll要反过来。
-	//angle.yaw =   DMP_DATA.dmp_yaw;
-	angle.pitch =  DMP_DATA.dmp_roll;
-	angle.roll =  DMP_DATA.dmp_pitch;
+	return (((float)DMP_DATA.ACCx)/DMP_ACC_SCALE)*ONE_G;
+}
+
+float Get_DMP_Acc_y()
+{
+	return (((float)DMP_DATA.ACCy)/DMP_ACC_SCALE)*ONE_G;
+}
+
+float Get_DMP_Acc_z()
+{
+	return (((float)DMP_DATA.ACCz)/DMP_ACC_SCALE)*ONE_G;
+}
+
+float Get_DMP_qw()
+{
+	return (float)DMP_DATA.qw;
+}
+
+float Get_DMP_qx()
+{
+	return (float)DMP_DATA.qx;
+}
+
+float Get_DMP_qy()
+{
+	return (float)DMP_DATA.qy;
+}
+
+float Get_DMP_qz()
+{
+	return (float)DMP_DATA.qz;
 }

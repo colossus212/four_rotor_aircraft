@@ -160,22 +160,22 @@ void PID_Parameter_Init()
 	
 
 	//The data of roll
-	roll_angle_PID.kp = 0;  // 5.0
+	roll_angle_PID.kp = 0;  // 0.09 modualated ??
 	roll_angle_PID.ki = 0; //0.01
 	roll_angle_PID.kd = 0; //1.7
 
-	roll_rate_PID.kp = 0; //1.9
+	roll_rate_PID.kp = 0; // 0.2 modualated
 	roll_rate_PID.ki = 0;
-	roll_rate_PID.kd = 0; // 0.22
+	roll_rate_PID.kd = 0; // 0.01 modualated
 	
 	//The data of yaw
 	yaw_angle_PID.kp = 0;   // 5.0
 	yaw_angle_PID.ki = 0;
 	yaw_angle_PID.kd = 0; //0.13
 	
-	yaw_rate_PID.kp = 0;   // 1.8
+	yaw_rate_PID.kp = 0; // 1.8 modualated
 	yaw_rate_PID.ki = 0;
-	yaw_rate_PID.kd = 0; //0.1
+	yaw_rate_PID.kd = 0; //0.05 modualated
 
 	alt_PID.kp = 0 ; //5.0
 	alt_PID.ki = 0; //0.01
@@ -190,9 +190,9 @@ void PID_Parameter_Init()
 	roll_angle_PID.integ_max = 100;
 	yaw_angle_PID.integ_max = 100;
 	
-	pitch_rate_PID.integ_max = 200;
-	roll_rate_PID.integ_max = 200;
-	yaw_angle_PID.integ_max = 200;
+	pitch_rate_PID.integ_max = 500;
+	roll_rate_PID.integ_max = 500;
+	yaw_rate_PID.integ_max = 500;
 
 	alt_PID.integ_max = 200;
 	alt_vel_PID.integ_max = 200;

@@ -14,8 +14,10 @@
 #include "math.h"
 //#include "KalmanFilter.h"
 
-struct _angle angle;
+#define isnan(x)    ((x) != (x))
 
+struct _angle angle;
+const static float pi = 3.1415926;
 
 //   快速求平方根倒数
 
@@ -116,7 +118,7 @@ void Get_Attitude()
 {
 	Prepare_Data();
 	
-	IMUupdate(	MPU6050_data.Gx * AtR, MPU6050_data.Gy * AtR, MPU6050_data.Gz * AtR, MPU6050_data.Ax, MPU6050_data.Ay, MPU6050_data.Az);	
+	IMUupdate(MPU6050_data.Gx * AtR, MPU6050_data.Gy * AtR, MPU6050_data.Gz * AtR, MPU6050_data.Ax, MPU6050_data.Ay, MPU6050_data.Az);	
 }
 
 float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
@@ -198,8 +200,8 @@ void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
 	/*          关于地磁如何进行倾角补偿                       */    
 	/*参考  http://baike.baidu.com/view/1239157.htm?fr=aladdin */
 	
-	Xr = X_HMC * COS(-angle.roll) + Y_HMC * SIN(angle.roll) * SIN(-angle.pitch) - Z_HMC * COS(angle.pitch) * SIN(angle.roll);
-	Yr = Y_HMC * COS(angle.pitch) + Z_HMC * SIN(-angle.pitch);
+	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hy() * SIN(angle.roll) * SIN(-angle.pitch) - Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
+	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hz() * SIN(-angle.pitch);
 	
 	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA; // yaw 
 	angle.roll *= RtA;
@@ -207,13 +209,104 @@ void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
 
 }
 
-void Get_Attitude_DMP()
-{	
-	Multiple_Read_HMC5883L();   //读取地磁数据
-	Xr = X_HMC * COS(-angle.roll) + Y_HMC * SIN(angle.roll) * SIN(-angle.pitch) - Z_HMC * COS(angle.pitch) * SIN(angle.roll);
-	Yr = Y_HMC * COS(angle.pitch) + Z_HMC * SIN(-angle.pitch);
-	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA;
+// a varient of asin() that checks the input ranges and ensures a
+// valid angle as output. If nan is given as input then zero is
+// returned.
+float dmpsafe_asin(float v)
+{
+	if (isnan(v)) 
+	{
+		return 0.0;
+	}
+	if (v >= 1.0)
+	{
+		return pi/2;
+	}
+	if (v <= -1.0) 
+	{
+		return -pi/2;
+	}
+	return asin(v);
 }
+
+
+
+float q[4];
+	//以下数据由 DMP_Routing 更新
+float  dmp_pitch;  //DMP算出来的俯仰角	单位：度
+float  dmp_roll;    //DMP滚转角		   单位：度
+float  dmp_yaw;		//DMP 航向角，由于没有磁力计参与，航向角会飘  单位：度
+float  dmp_gyrox;	// 陀螺仪 X轴 角速度   单位：度每秒
+float  dmp_gyroy;   // 陀螺仪 Y轴 角速度   单位：度每秒
+float  dmp_gyroz;   // 陀螺仪 Z轴 角速度   单位：度每秒
+float  dmp_accx;	// 加速度计 X轴   单位：m/S^2
+float  dmp_accy;	// 加速度计 Y轴   单位：m/S^2
+float  dmp_accz;	// 加速度计 Z轴   单位：m/S^2
+
+void Get_Attitude_DMP()
+{
+		// 四元数
+	float  qtemp[4],norm ;	
+		// Get DMP data and fix yaw
+	DMP_Routing();
+		//读取地磁数据
+	Multiple_Read_HMC5883L();	
+		 
+	dmp_gyrox = Get_DMP_Gyro_x();
+	dmp_gyroy = Get_DMP_Gyro_y();
+	dmp_gyroz = Get_DMP_Gyro_z();
+		//acc sensitivity to +/-    4 g
+		//加速度 转成单位： m/S^2
+	dmp_accx = Get_DMP_Acc_x();
+	dmp_accy = Get_DMP_Acc_y();
+	dmp_accz = Get_DMP_Acc_z();
+		//提取DMP的四元数
+	qtemp[0] = Get_DMP_qw(); 	
+	qtemp[1] = Get_DMP_qx();
+	qtemp[2] = Get_DMP_qy();
+	qtemp[3] = Get_DMP_qz();
+		// 四元数归一化
+	norm = Q_rsqrt(qtemp[0]*qtemp[0] + qtemp[1]*qtemp[1] + qtemp[2]*qtemp[2] + qtemp[3]*qtemp[3]);
+	q[0] = qtemp[0] * norm;
+	q[1] = qtemp[1] * norm;
+	q[2] = qtemp[2] * norm;
+	q[3] = qtemp[3] * norm;
+	
+	dmp_roll = (atan2(2.0*(q[0]*q[1] + q[2]*q[3]), 1 - 2.0*(q[1]*q[1] + q[2]*q[2])))* 180/pi;
+		// we let safe_asin() handle the singularities near 90/-90 in pitch
+	dmp_pitch = dmpsafe_asin(2.0*(q[0]*q[2] - q[3]*q[1]))* 180/pi;
+		//注意：此处计算反了，非右手系。
+		
+	//dmp_yaw = -atan2(2.0*(q[0]*q[3] + q[1]*q[2]),1 - 2.0*(q[2]*q[2] + q[3]*q[3]))* 180/pi;
+  	//#ifdef YAW_CORRECT
+	//dmp_yaw = -dmp_yaw;
+	//#endif
+	
+		//注意：前面计算反了，所以这里pitch 和 roll要反过来。
+	//angle.yaw =   DMP_DATA.dmp_yaw;
+	angle.pitch =  dmp_roll;
+	angle.roll =  dmp_pitch;
+	
+	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hy() * SIN(angle.roll) * SIN(-angle.pitch) - Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
+	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hz() * SIN(-angle.pitch);
+	
+	angle.yaw = atan2( (double)Get_HMC5883L_Hy(), (double)Get_HMC5883L_Hx() ) * RtA;
+}
+
+
+float Get_Pitch()
+{
+	return angle.pitch;
+}
+float Get_Roll()
+{
+	return angle.roll;
+}
+float Get_Yaw()
+{
+	return angle.yaw;
+}
+
 
 
 /********************** 直接用欧拉角解算姿态 含卡夫曼滤波************************

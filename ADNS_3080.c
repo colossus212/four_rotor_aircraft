@@ -9,6 +9,9 @@
 		  void ADNS3080_Motion_Read();
 		  void ADNS3080_SROM_Download();
 		  void ADNS3080_Frame_Capture();
+		  uint8_t Get_Frame_Data(uint8_t count);
+		  uint8_t Get_Frame_Data_Matrix(uint8_t i, uint8_t j);
+		  
 		  
 		  #define SPI_SCLK P5.2  // pin 35
 		  #define SPI_MOSI P5.4  // pin 37
@@ -330,12 +333,12 @@ void ADNS3080_SROM_Download()
 * A hardware reset is required to restore navigation,
 * and the firmware must be reloaded afterwards if required.
 *******************************************************************************/
-//uint8_t Frame_Data[30][30];
 uint8_t Frame_Data[900];
 uint8_t Frame_Data_Correct = 0;
 
 void ADNS3080_Frame_Capture()
 {
+	Frame_Data_Correct = 0;
 		// Writing 0x83 to Frame_Capture register will cause the next available complete
 		// 1 and 2/3 frames of pixel values to be stored to SROM RAM. 
 	SPI_Write_Byte(ADNS3080_RA_Frame_Capture, 0x83);
@@ -376,4 +379,14 @@ void ADNS3080_Frame_Data_Correct()
 	//		for(j = 0; j < 30; j++)
 	//			Frame_Data[i][j] = 0;
 	//}
+}
+
+uint8_t Get_Frame_Data(uint8_t count)
+{
+	return Frame_Data[count];
+}
+
+uint8_t Get_Frame_Data_Matrix(uint8_t i, uint8_t j)
+{
+	return Frame_Data[i * 30 + j];
 }

@@ -8,11 +8,11 @@
 * API		: HMC5883L_Init(void)
 		  void Multiple_Read_HMC5883L(void)
 
-		  int16_t Get_HMC5883L_Hx();
-		  int16_t Get_HMC5883L_Hy();
-		  int16_t Get_HMC5883L_Hz();
+		  float Get_HMC5883L_Hx();
+		  float Get_HMC5883L_Hy();
+		  float Get_HMC5883L_Hz();
 		  
-		  extern int16_t Get_HMC5883L_Hx(), Y_HMC, Z_HMC;
+		  extern int16_t X_HMC, Y_HMC, Z_HMC;
 		 
 ************************************************/
 

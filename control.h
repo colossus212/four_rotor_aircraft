@@ -10,7 +10,7 @@ void Control_Fly();
 
 void Control_Posture(float roll, float pitch, float yaw);
 void Control_Heigh(float H);
-
+void Control_Track();
 
 
 #endif

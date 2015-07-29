@@ -32,7 +32,8 @@
  |  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41                          |
  * ================================================================================================ */
 
-struct DMP_FIFO_map{
+struct DMP_FIFO_map
+{
 int16_t qw;		 // DMP输出的四元数值
 int16_t null0;
 int16_t qx;
@@ -41,11 +42,11 @@ int16_t qy;
 int16_t null2;
 int16_t qz;
 int16_t null3;
-int16_t GYROx;	// 陀螺仪 X轴 角速度 ADC值
+int16_t GYROx;	// 陀螺仪 X轴 角速度 DEG值
 int16_t null4;
-int16_t GYROy;  // 陀螺仪 Y轴 角速度 ADC值
+int16_t GYROy;  // 陀螺仪 Y轴 角速度 DEG值
 int16_t null5;
-int16_t GYROz;	// 陀螺仪 Z轴 角速度 ADC值
+int16_t GYROz;	// 陀螺仪 Z轴 角速度 DEG值
 int16_t null6;
 int16_t ACCx;   // 加速度计 X轴 ADC值
 int16_t null7;
@@ -54,28 +55,10 @@ int16_t null8;
 int16_t ACCz;	  // 加速度计 Z轴 ADC值
 int16_t null9;
 int16_t null10;
-
-//以下数据由 DMP_Routing 更新。
-
-float  dmp_pitch;  //DMP算出来的俯仰角	单位：度
-float  dmp_roll;    //DMP滚转角		   单位：度
-float  dmp_yaw;		//DMP 航向角，由于没有磁力计参与，航向角会飘  单位：度
-float  dmp_gyrox;	// 陀螺仪 X轴 角速度   单位：度每秒
-float  dmp_gyroy;   // 陀螺仪 Y轴 角速度   单位：度每秒
-float  dmp_gyroz;   // 陀螺仪 Z轴 角速度   单位：度每秒
-float  dmp_accx;	// 加速度计 X轴   单位：m/S^2
-float  dmp_accy;	// 加速度计 Y轴   单位：m/S^2
-float  dmp_accz;	// 加速度计 Z轴   单位：m/S^2
-
 };
 
 //------------------------------------------------------------------
 
-extern struct DMP_FIFO_map DMP_DATA;  //数据引出				
-extern  float q[4];
-
-extern float gyroxGloble;
-extern float gyroyGloble;
 
 //当希望读取 陀螺仪的X轴输出时，变量是 DMP_DATA.dmp_gyrox		   -
 //当希望读取 陀螺仪的Y轴输出时，变量是 DMP_DATA.dmp_gyroy		   -
@@ -90,8 +73,16 @@ uint8_t MPU6050_DMP_Initialize(void); //DMP初始化
 void DMPCalibrate(void);
 void DMP_Routing(void);	 //DMP 线程，主要用于读取和处理DMP的结果   [需要定时调用]
 void DMP_Get_YawPitchRoll(void);  //读取载体的姿态角
-
-
+float Get_DMP_Gyro_x();
+float Get_DMP_Gyro_y();
+float Get_DMP_Gyro_z();
+float Get_DMP_Acc_x();
+float Get_DMP_Acc_y();
+float Get_DMP_Acc_z();
+float Get_DMP_qw();
+float Get_DMP_qx();
+float Get_DMP_qy();
+float Get_DMP_qz();
 
 
 //typedefine

@@ -15,7 +15,5 @@ float Get_HMC5883L_Hx();
 float Get_HMC5883L_Hy();
 float Get_HMC5883L_Hz();
 
-extern float X_HMC, Y_HMC, Z_HMC;
-
 #endif
 
