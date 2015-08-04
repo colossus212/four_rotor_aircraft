@@ -10,9 +10,9 @@ uint8_t Uart_Buf_Motion[24];
 				,int16_t alt,int16_t tempr,int16_t press)
 *功　　能:		向上位机发送经过解算后的姿态数据
 输入参数：
-		int16_t yaw 经过解算后的航向角度。单位为 1 度 0 -> 360  对应 0 -> 360.0度
-		int16_t pitch 解算得到的俯仰角度，单位 1 度。-90 - 90 对应 -90.0 -> 90.0 度
-		int16_t roll  解算后得到的横滚角度，单位 1 度。 -180 -> 180 对应 -180.0  ->  180.0度
+		int16_t yaw 经过解算后的航向角度。单位为 0.1 度 0 -> 3600  对应 0 -> 360.0度
+		int16_t pitch 解算得到的俯仰角度，单位 0.1 度。-900 - 900 对应 -90.0 -> 90.0 度
+		int16_t roll  解算后得到的横滚角度，单位 0.1 度。 -1800 -> 1800 对应 -180.0  ->  180.0度
 		int16_t alt   气压高度。 单位 1 cm。  范围一个整型变量
 		// int16_t tempr 温度 。 单位0.1摄氏度   范围：直到你的电路板不能正常工作
 		// int16_t press 气压压力。单位10Pa  一个大气压强在101300pa 这个已经超过一个整型的范围。需要除以10再发给上位机
@@ -23,10 +23,10 @@ void AHRS_Captain_Flight_IMU(int16_t yaw, int16_t pitch, int16_t roll,
 	int16_t alt, int16_t tempr, int16_t press, int16_t IMUpersec)
 {
 	//uint8_t i;
-	yaw *= 10;
-	pitch *= 10;
-	roll *= 10;
-	alt *= 10;
+//	yaw *= 10;
+//	pitch *= 10;
+//	roll *= 10;
+//	alt *= 10;
 	Uart_Buf_IMU[0] = 0xA5;
 	Uart_Buf_IMU[1] = 0x5A;
 	Uart_Buf_IMU[2] = 14+2;

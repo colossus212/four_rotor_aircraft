@@ -3,10 +3,6 @@
 #define _IIC_
 
 
-
-
-
-
 void SCL_OUTMODE();
 void SDA_INMODE();	//set SDA input mode
 void SDA_OUTMODE();

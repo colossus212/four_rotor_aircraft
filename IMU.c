@@ -1,10 +1,10 @@
 
 /**********************************************************************************
- * 文件名  ：IMU.c  
+ * File Name  ：IMU.c  
  * Version	: 2015.7.22 By DHP
  * Device(s)	: R5F100LE
  * Tool-Chain	: CA78K0R
- * Description	: 姿态解算
+ * Description	: IMU
  * API		: 
 		  void Get_Attitude_DMP()
 		  void Get_Attitude()
@@ -93,9 +93,9 @@ void Prepare_Data(void)
 	MPU6050_Read_RawData();         //读取6050
 	Multiple_Read_HMC5883L();   //读取地磁数据
 
-	MPU6050_data.Ax = KalmanFilter(MPU6050_data.Ax, & Kalman_Ax);
-	MPU6050_data.Ay = KalmanFilter(MPU6050_data.Ay, & Kalman_Ay);
-	MPU6050_data.Az = KalmanFilter(MPU6050_data.Az, & Kalman_Az);
+//	Get_MPU6050_Ax() = KalmanFilter(Get_MPU6050_Ax(), & Kalman_Ax);
+//	Get_MPU6050_Ay() = KalmanFilter(Get_MPU6050_Ay(), & Kalman_Ay);
+//	Get_MPU6050_Az() = KalmanFilter(Get_MPU6050_Az(), & Kalman_Az);
 	
 }
 
@@ -105,7 +105,7 @@ float qa0, qa1, qa2, qa3;     //四元数法  得到当前姿态
 #define Kp 0.8f               // 比例积分控制器的P  proportional gain governs rate of convergence to accelerometer比例增益控制收敛速度的加速度计/magnetometer 磁强计
 #define Ki 0.0015f            // 比例积分控制器的I     integral gain governs rate of convergence of gyroscope biases
 
-#define halfT 0.0025f        //姿态更新周期，一般是四元数微分求解时用的。 采样周期的一半  本程序 2.5MS 采集一次  所以 halfT是1.25MS
+#define halfT 0.005f        //姿态更新周期，一般是四元数微分求解时用的。 采样周期的一半  本程序 10 MS 采集一次  所以 halfT是 5 MS
 
 /**************************************
  * 函数名：Get_Attitude()
@@ -118,7 +118,7 @@ void Get_Attitude()
 {
 	Prepare_Data();
 	
-	IMUupdate(MPU6050_data.Gx * AtR, MPU6050_data.Gy * AtR, MPU6050_data.Gz * AtR, MPU6050_data.Ax, MPU6050_data.Ay, MPU6050_data.Az);	
+	IMUupdate(Get_MPU6050_Gx() * AtR, Get_MPU6050_Gy() * AtR, Get_MPU6050_Gz() * AtR, Get_MPU6050_Ax(), Get_MPU6050_Ay(), Get_MPU6050_Az());	
 }
 
 float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
@@ -290,7 +290,7 @@ void Get_Attitude_DMP()
 	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hy() * SIN(angle.roll) * SIN(-angle.pitch) - Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
 	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hz() * SIN(-angle.pitch);
 	
-	angle.yaw = atan2( (double)Get_HMC5883L_Hy(), (double)Get_HMC5883L_Hx() ) * RtA;
+	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA;
 }
 
 

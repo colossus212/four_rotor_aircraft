@@ -36,6 +36,7 @@
 
 #include "include.h"
 #include "math.h"
+//#include "KalmanFilter.h"
 
 
 #define MPU6050_Int P4.3
@@ -45,8 +46,8 @@ MPU6050_Struct MPU6050_data;
 
 const static float pi = 3.1415926;
 
-float AcceRatio;   
-float GyroRatio;
+static float AcceRatio;   
+static float GyroRatio;
 float TemperatureRatio = 340.0;
 float TemperatureOffset = - 36.53;
 
@@ -61,31 +62,37 @@ int16_t  MPU6050_FIFO[6][11];
 
 float Get_MPU6050_Ax()
 {
+	MPU6050_data.Ax = KalmanFilter(MPU6050_data.Ax, & Kalman_Ax);
 	return MPU6050_data.Ax;
 }
 
 float Get_MPU6050_Ay()
 {
+	MPU6050_data.Ay = KalmanFilter(MPU6050_data.Ay, & Kalman_Ay);
 	return MPU6050_data.Ay;
 }
 
 float Get_MPU6050_Az()
 {
+	MPU6050_data.Az = KalmanFilter(MPU6050_data.Az, & Kalman_Az);
 	return MPU6050_data.Az;
 }
 
 float Get_MPU6050_Gx()
 {
+	MPU6050_data.Gx = KalmanFilter(MPU6050_data.Gx, & Kalman_Gx);
 	return MPU6050_data.Gx;
 }
 
 float Get_MPU6050_Gy()
 {
+	MPU6050_data.Gy = KalmanFilter(MPU6050_data.Gy, & Kalman_Gy);
 	return MPU6050_data.Gy;
 }
 
 float Get_MPU6050_Gz()
 {
+	MPU6050_data.Gz = KalmanFilter(MPU6050_data.Gz, & Kalman_Gz);
 	return MPU6050_data.Gz;
 }
 
@@ -151,7 +158,7 @@ void MPU6050_Get_Offset()
 		MPU6050_Read_RawData();
 		Ax += MPU6050_data.Ax;
 		Ay += MPU6050_data.Ay; 
-		Az += MPU6050_data.Az;
+		//Az += MPU6050_data.Az;
 		Gx += MPU6050_data.Gx;
 		Gy += MPU6050_data.Gy;		
 		Gz += MPU6050_data.Gz;
@@ -159,7 +166,7 @@ void MPU6050_Get_Offset()
 	
 	Ax_Offset = Ax / sample_times;
 	Ay_Offset = Ay / sample_times;
-	Az_Offset = Az / sample_times;
+	//Az_Offset = Az / sample_times;
 	Gx_Offset = Gx / sample_times;
 	Gy_Offset = Gy / sample_times;
 	Gz_Offset = Gz / sample_times;
@@ -229,6 +236,8 @@ void MPU6050_Init(void)
 	uint8_t Add[1];
 	MPU6050_Get_Device_ID(Add);
 	
+	MPU6050_Int_Init();
+	
 	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_PWR_MGMT_1, 0x00);	//awake
 	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_SMPLRT_DIV, 0x07);
 	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_CONFIG, 0x06);
@@ -279,7 +288,7 @@ void MPU6050_Read_RawData()
 		{
 			MPU6050_data.Ax = ( (float) (( ((int16_t)buf[0]) <<8) + buf[1]) ) / AcceRatio - Ax_Offset; 
 			MPU6050_data.Ay = ( (float) (( ((int16_t)buf[2]) <<8) + buf[3]) ) / AcceRatio - Ay_Offset; 
-			MPU6050_data.Az = ( (float) (( ((int16_t)buf[4]) <<8) + buf[5]) ) / AcceRatio - Az_Offset; 
+			MPU6050_data.Az = ( (float) (( ((int16_t)buf[4]) <<8) + buf[5]) ) / AcceRatio; //- Az_Offset; 
 			MPU6050_data.Tt = ( (float) (( ((int16_t)buf[6]) <<8) + buf[7]) ) / TemperatureRatio - TemperatureOffset;
 			MPU6050_data.Gx = ( (float) ( (( ((int16_t)buf[8]) <<8) + buf[9])) ) / GyroRatio - Gx_Offset; 
 			MPU6050_data.Gy = ( (float) ( (( ((int16_t)buf[10]) <<8) + buf[11])) ) / GyroRatio  - Gy_Offset; 
@@ -326,8 +335,7 @@ MPU6050_Int_Init()
 0 数据寄存器还没有更新
 *******************************************************************************/
 unsigned char MPU6050_is_DRY(void)
-{
-	MPU6050_Int_Init();
+{	
     if(MPU6050_Int == 1)
 	{
 	  return 1;
@@ -1287,62 +1295,113 @@ uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
+static uint16_t test_counter = 0;
+static uint16_t test_counter_wrong = 0;
+static uint16_t test_counter_wrong_2 = 0;
+float Quaternion_Normalization;
+float Quaternion_Normalization_Min = 268200000.0, Quaternion_Normalization_Max = 268600000.0;
+
 
 void DMP_Routing(void)
 {
-	int i;
-	uint8_t* ptr = (uint8_t*)&DMP_DATA;	 //准备将FIFO的数据包，
-	while((MPU6050_is_DRY() == 0) && (fifoCount < dmpPacketSize));
-  
+	int i;	
+	struct DMP_FIFO_map DMP_DATA_Last_Time;
+	uint8_t* ptr = (uint8_t*) & DMP_DATA;	
+	DMP_DATA_Last_Time = DMP_DATA;	
+	
+	//while((MPU6050_is_DRY() == 0) && (fifoCount < dmpPacketSize));
 		mpuIntStatus = MPU6050_Get_Int_Status();	
 		// get current FIFO count
 	    fifoCount = MPU6050_Get_FIFO_Count();
 		// check for overflow (this should never happen unless our code is too inefficient)
-	    if ((mpuIntStatus & 0x10) || fifoCount == 1024) 
-	    {  //检测 FIFO缓冲区是否爆满 溢出
-	        // reset so we can continue cleanly
-	        MPU6050_Reset_FIFO();
-	    // otherwise, check for DMP data ready interrupt (this should happen frequently)
-	    }else if (mpuIntStatus & 0x02) 
-			{
+	if ((mpuIntStatus & 0x10) || fifoCount == 1024) 
+	{
+	      		// reset so we can continue cleanly
+		MPU6050_Reset_FIFO();
+	    		// otherwise, check for DMP data ready interrupt (this should happen frequently)
+	}else if (mpuIntStatus & 0x02) 
+		{
 				// wait for correct available data length, should be a VERY short wait
-				while (fifoCount < dmpPacketSize) fifoCount = MPU6050_Get_FIFO_Count();
+			while (fifoCount < dmpPacketSize) fifoCount = MPU6050_Get_FIFO_Count();
 				// read a packet from FIFO
-				MPU6050_Get_FIFO_Bytes(fifoBuffer, dmpPacketSize);
+			MPU6050_Get_FIFO_Bytes(fifoBuffer, dmpPacketSize);
 				// track FIFO count here in case there is > 1 packet available
 				// (this lets us immediately read more without waiting for an interrupt)
-				fifoCount -= dmpPacketSize;
+			fifoCount -= dmpPacketSize;
+
+			for(i=0 ; i < dmpPacketSize; i+=2) 
+			{
+				ptr[i]   = fifoBuffer[i+1];  //数据大小端的处理。
+				ptr[i+1] = fifoBuffer[i];
+			}
+			
+			//We can detect a corrupted FIFO by monitoring the quaternion data and
+			//ensuring that the magnitude is always normalized to one. This
+			//shouldn't happen in normal operation, but if an I2C error occurs,
+			//the FIFO reads might become misaligned.	
+			//Let's start by scaling down the quaternion data to avoid long long
+			//math.
 		
-				for(i=0 ; i < dmpPacketSize; i+=2) 
+			Quaternion_Normalization = ((float)DMP_DATA.qw) * ((float)DMP_DATA.qw) + ((float)DMP_DATA.qx) * ((float)DMP_DATA.qx) 
+						+ ((float)DMP_DATA.qy) * ((float)DMP_DATA.qy) + ((float)DMP_DATA.qz) * ((float)DMP_DATA.qz);
+
+			if(Quaternion_Normalization > Quaternion_Normalization_Max || Quaternion_Normalization < Quaternion_Normalization_Min)
+			{
+				
+				if(test_counter == (test_counter_wrong + 1)) 
+					test_counter_wrong_2++;
+				if(test_counter_wrong_2 == 3) 
 				{
-					ptr[i]   = fifoBuffer[i+1];  //数据大小端的处理。
-					ptr[i+1] = fifoBuffer[i];
+					MPU6050_Reset_FIFO();
+					test_counter_wrong_2 = 0;
 				}
-			}	
+					// if wrong, the data remain the last time
+				DMP_DATA = DMP_DATA_Last_Time;
+				test_counter_wrong = test_counter;
+			}
+			
+			test_counter ++;
+			
+		}
+		if(test_counter >= 60000)
+		{
+			test_counter = 0;
+		}
+	
+
 }
 
 
-const float gyro_max = 2000;
+//static const float gyro_max = 1000;
 	//DMP_DATA.GYROx 即为直接的角度deg
 float Get_DMP_Gyro_x()
 {
-	if(DMP_DATA.GYROx > gyro_max) DMP_DATA.GYROx = 0;
-	if(DMP_DATA.GYROx < - gyro_max) DMP_DATA.GYROx = 0;
-	return ((float)DMP_DATA.GYROx);
+	//if(DMP_DATA.GYROx > gyro_max) DMP_DATA.GYROx = gyro_max;
+	//if(DMP_DATA.GYROx < - gyro_max) DMP_DATA.GYROx = - gyro_max;
+	float Gx;
+	Gx = ((float)DMP_DATA.GYROx);
+	Gx = KalmanFilter(Gx, & Kalman_Gx);
+	return Gx;
 }
 
 float Get_DMP_Gyro_y()
 {
-	if(DMP_DATA.GYROy > gyro_max) DMP_DATA.GYROy = 0;
-	if(DMP_DATA.GYROy < - gyro_max) DMP_DATA.GYROy = 0;
-	return ((float)DMP_DATA.GYROy);
+	//if(DMP_DATA.GYROy > gyro_max) DMP_DATA.GYROy = gyro_max;
+	//if(DMP_DATA.GYROy < - gyro_max) DMP_DATA.GYROy = - gyro_max;
+	float Gy;
+	Gy = ((float)DMP_DATA.GYROy);
+	Gy = KalmanFilter(Gy, & Kalman_Gy);
+	return Gy;
 }
 
 float Get_DMP_Gyro_z()
 {
-	if(DMP_DATA.GYROz > gyro_max) DMP_DATA.GYROz = 0;
-	if(DMP_DATA.GYROz < - gyro_max) DMP_DATA.GYROz = 0;
-	return ((float)DMP_DATA.GYROz);
+	//if(DMP_DATA.GYROz > gyro_max) DMP_DATA.GYROz = gyro_max;
+	//if(DMP_DATA.GYROz < - gyro_max) DMP_DATA.GYROz = - gyro_max;
+	float Gz;
+	Gz = ((float)DMP_DATA.GYROz);
+	Gz = KalmanFilter(Gz, & Kalman_Gz);
+	return Gz;
 }
 
 float Get_DMP_Acc_x()
@@ -1362,20 +1421,20 @@ float Get_DMP_Acc_z()
 
 float Get_DMP_qw()
 {
-	return (float)DMP_DATA.qw;
+	return ((float)DMP_DATA.qw);
 }
 
 float Get_DMP_qx()
 {
-	return (float)DMP_DATA.qx;
+	return ((float)DMP_DATA.qx);
 }
 
 float Get_DMP_qy()
 {
-	return (float)DMP_DATA.qy;
+	return ((float)DMP_DATA.qy);
 }
 
 float Get_DMP_qz()
 {
-	return (float)DMP_DATA.qz;
+	return ((float)DMP_DATA.qz);
 }

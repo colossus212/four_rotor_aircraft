@@ -96,7 +96,7 @@ typedef struct
 
 #endif
 
-extern MPU6050_Struct MPU6050_data; // MPU6050_data_old;
+//extern MPU6050_Struct MPU6050_data; // MPU6050_data_old;
 
 
 

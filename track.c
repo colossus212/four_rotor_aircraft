@@ -15,6 +15,7 @@
 #include <math.h>
 #include "IMU.h"
 
+const static float pi = 3.1415926;
 uint8_t Frame_Gradient_Matrix[30][30];
 
 //uint8_t Frame_Data_Matrix[30][30];
@@ -266,7 +267,7 @@ float Track()
 	uint8_t Current_x, Current_y;
 	uint8_t Destination_x, Destination_y;
 	float Target_yaw;
-	Edge_Detection();	
+	Edge_Detection();
 		// Get the current Position
 		// the position on the Frame is related to Pitch and Roll
 	count_x = tan(Get_Roll()) * 8 * 1600 / 25.4;
@@ -280,4 +281,5 @@ float Track()
 	
 	// to do
 	return Target_yaw;
+		// http://blog.csdn.net/jia20003/article/details/7724530
 }

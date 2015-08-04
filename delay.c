@@ -11,7 +11,7 @@
 
 #include "include.h"
 
-#define delay_time_i 2
+// #define delay_time_i 2
 
 void delay_us(uint16_t t)
 {
@@ -46,6 +46,6 @@ void Delay(unsigned long delay_time)
 {
    long i;
    
-   for(i=0; i<delay_time; i++);
+   for(i=0; i < delay_time; i++);
  
 }
