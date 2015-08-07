@@ -11,7 +11,7 @@
 #include "include.h"
 #include  <math.h>
 
-#define MOTO_MAX 30000
+#define MOTO_MAX 28000
 #define MOTO_MIN 6000
 
 #if 0
@@ -68,9 +68,31 @@
 #endif
 
 
+
+
+
 uint8_t Fly_flag;
 volatile float MOTO1 = 0, MOTO2 = 0, MOTO3 = 0, MOTO4 = 0;
+float MOTO_THRESHOLD = 0;
 float Roll_Target = 0, Pitch_Target = 0, Yaw_Target = 0, Height_Target = 100;
+
+
+/******************************************************************************
+* function :		void MOTO_Limiter()
+* Description : 
+*******************************************************************************/
+ void MOTO_Limiter()
+ {
+	 	if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX - 1;
+		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX - 1;
+		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX - 1;
+		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX - 1;
+
+		if(MOTO1 <= MOTO_MIN) MOTO1 = MOTO_MIN;
+		if(MOTO2 <= MOTO_MIN) MOTO2 = MOTO_MIN;
+		if(MOTO3 <= MOTO_MIN) MOTO3 = MOTO_MIN;
+		if(MOTO4 <= MOTO_MIN) MOTO4 = MOTO_MIN;
+ }
 
 /****************************************姿态控制********************************************/
 
@@ -109,23 +131,14 @@ void Control_Posture(float roll, float pitch, float yaw)
 		/*            /   \               */
 		/*           2     3              */
 		/* 1: MOTO1			 2: MOTO1	  */
-		/* 3: MOTO3			 4: MOTO4	  */
+		/* 3: MOTO3			 4: MOTO4	  */	
 		
+		MOTO1 = MOTO_THRESHOLD - pitch_rate_PID.output - roll_rate_PID.output + yaw_rate_PID.output;
+		MOTO2 = MOTO_THRESHOLD + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output;
+		MOTO3 = MOTO_THRESHOLD + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output;
+		MOTO4 = MOTO_THRESHOLD - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output;
 		
-		MOTO1 += - pitch_rate_PID.output - roll_rate_PID.output + yaw_rate_PID.output;
-		MOTO2 += + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output;
-		MOTO3 += + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output;
-		MOTO4 += - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output;
-		
-		if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX - 1;
-		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX - 1;
-		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX - 1;
-		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX - 1;
-
-		if(MOTO1 <= MOTO_MIN) MOTO1 = MOTO_MIN;
-		if(MOTO2 <= MOTO_MIN) MOTO2 = MOTO_MIN;
-		if(MOTO3 <= MOTO_MIN) MOTO3 = MOTO_MIN;
-		if(MOTO4 <= MOTO_MIN) MOTO4 = MOTO_MIN;
+	MOTO_Limiter();
 
 	if(Fly_flag == 1) Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
 		else    Motor_RateFlash(0, 0, 0, 0);
@@ -136,53 +149,27 @@ void Control_Posture(float roll, float pitch, float yaw)
 
 void Control_Heigh(float H)		//期望值,单位cm
 {
-	//static int j = 0;
-	float AccH;
-	float height = Get_Height();   //height是从超声波得到的数据
-	height = height / sqrt(tan(Get_Pitch() * AtR) * tan(Get_Pitch() * AtR) + tan(Get_Roll() * AtR) * tan(Get_Roll() * AtR) + 1);
+	PID_Incremental( & alt_PID, H, Get_Height());	
 	
-	//if(j >= 2)  //core 2   shell1  
-	//{
-			//*********外环高度PID***************//		
-		PID_Position( & alt_PID, H, height);
-		 //j = 0;
-	//}
-	//j ++;	
-		//*******内环(加速度环)PID***********//
-	AccH = sqrt(Get_DMP_Acc_x() * Get_DMP_Acc_x() + Get_DMP_Acc_y() * Get_DMP_Acc_y() + Get_DMP_Acc_z() * Get_DMP_Acc_z()); 
-		//if don't use DMP
-	//AccH = sqrt(Get_MPU6050_Ax() * Get_MPU6050_Ax() + Get_MPU6050_Ay() * Get_MPU6050_Ay() + Get_MPU6050_Az() * Get_MPU6050_Az()); 
+		//油门控制
+	MOTO1 +=  alt_PID.output;
+	MOTO2 +=  alt_PID.output;
+	MOTO3 +=  alt_PID.output;
+	MOTO4 +=  alt_PID.output;
 	
-	PID_Position( & alt_vel_PID, alt_PID.output, (AccH - 9.82)* 100 );
-
-	/********************************油门控制******************************************/
-
-		MOTO1 += alt_vel_PID.output;
-		MOTO2 += alt_vel_PID.output;
-		MOTO3 += alt_vel_PID.output;
-		MOTO4 += alt_vel_PID.output;
-		
-//		if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX - 1;
-//		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX - 1;
-//		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX - 1;
-//		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX - 1;
-
-		if(MOTO1 <= MOTO_MIN) MOTO1 = MOTO_MIN;
-		if(MOTO2 <= MOTO_MIN) MOTO2 = MOTO_MIN;
-		if(MOTO3 <= MOTO_MIN) MOTO3 = MOTO_MIN;
-		if(MOTO4 <= MOTO_MIN) MOTO4 = MOTO_MIN;
+	MOTO_Limiter();
 
 	if(Fly_flag == 1) Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
 	else    Motor_RateFlash(0, 0, 0, 0);
 }
 
 
-void Control_Standby()
+void Control_Fly_Flag_Off()
 {
 	Fly_flag = 0;
 }
 
-void Control_Fly()
+void Control_Fly_Flag_On()
 {
 	Fly_flag = 1;
 }
@@ -190,19 +177,27 @@ void Control_Fly()
 void Control_Track()
 {
 	Control_Posture(0, 0, Track());
-	//Control_Heigh(120);
+	//Height_Target = 120;
 }
 
-void Control_Flying_Off()
+void Control_Fly()
 {
-	//Height_Target = 40;
-	//delay_s(2);
-	//Height_Target = 80;
-	//delay_s(2);
-	//Height_Target = 100;
+	R_TAU0_Channel5_Start();
+	delay_ms(500);
+	MOTO_THRESHOLD = 21000;
+	Motor_RateFlash(MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD);
+	delay_ms(100);
+	Control_Fly_Flag_On();
+	R_TAU0_Channel5_Start();			
 }
 
 void Control_Land()
 {
-	
+	Height_Target = Get_Height();
+	while(Get_Height() == 20)
+	{
+		Height_Target -= 5;
+		delay_ms(100);
+	}
+	Motor_RateFlash(0, 0, 0, 0);
 }

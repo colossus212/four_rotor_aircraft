@@ -14,8 +14,6 @@
 #include "math.h"
 //#include "KalmanFilter.h"
 
-#define isnan(x)    ((x) != (x))
-
 struct _angle angle;
 const static float pi = 3.1415926;
 
@@ -287,10 +285,13 @@ void Get_Attitude_DMP()
 	angle.pitch =  dmp_roll;
 	angle.roll =  dmp_pitch;
 	
-	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hy() * SIN(angle.roll) * SIN(-angle.pitch) - Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
-	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hz() * SIN(-angle.pitch);
+	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hx() * SIN(angle.pitch) * SIN(-angle.roll) - Get_HMC5883L_Hz() * COS(-angle.roll) * SIN(angle.pitch);
+	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hz() * SIN(-angle.roll);
 	
-	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA;
+	//angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA;
+	angle.yaw = atan2(Yr, Xr) * RtA;
+	
+	if(isnan(angle.yaw)) angle.yaw = 0;
 }
 
 

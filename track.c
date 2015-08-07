@@ -48,6 +48,7 @@ void Dirivative_Operator()
 	for(i = 1; i < 29; i++)
 		for(j = 1; j < 29; j++)
 			{
+				Gx = 0; Gy = 0;
 				for(k = 0; k < 3; k++)
 					for(l = 0; l < 3; l++)
 						{
@@ -76,6 +77,7 @@ void Robert_Operator()
 	for(i = 0; i < 29; i++)
 		for(j = 0; j < 29; j++)
 			{
+				Gx = 0; Gy = 0;
 				for(k = 0; k < 2; k++)
 					for(l = 0; l < 2; l++)
 						{
@@ -106,6 +108,7 @@ void Sobel_Operator()
 	for(i = 1; i < 29; i++)
 		for(j = 1; j < 29; j++)
 			{
+				Gx = 0; Gy = 0;
 				for(k = 0; k < 3; k++)
 					for(l = 0; l < 3; l++)
 						{
@@ -138,6 +141,7 @@ void Prewitt_Operator()
 	for(i = 1; i < 29; i++)
 		for(j = 1; j < 29; j++)
 			{
+				Gx = 0; Gy = 0;
 				for(k = 0; k < 3; k++)
 					for(l = 0; l < 3; l++)
 						{
@@ -170,6 +174,7 @@ void Laplacian_Operator()
 	for(i = 1; i < 29; i++)
 		for(j = 1; j < 29; j++)
 			{
+				ONE = 0; //TWO = 0;
 				for(k = 0; k < 3; k++)
 					for(l = 0; l < 3; l++)
 						{
@@ -193,7 +198,7 @@ void Canny_Operator()
 					4, 9, 12, 9, 4,
 					5, 12, 15, 12, 5,
 					4, 9, 12, 9, 4,
-					2, 4, 5, 4, 2,};
+					2, 4, 5, 4, 2};
 	const int8_t Dirivative_Operator_x[3][3] = {0, 0, 0,
 						-1, 0, 1,
 						0, 0, 0};
@@ -206,6 +211,7 @@ void Canny_Operator()
 	for(i = 2; i < 28; i++)
 		for(j = 2; j < 28; j++)
 			{
+				SUM = 0;
 				for(k = 0; k < 5; k++)
 					for(l = 0; l < 5; l++)
 						{
@@ -220,6 +226,7 @@ void Canny_Operator()
 	for(i = 1; i < 29; i++)
 		for(j = 1; j < 29; j++)
 			{
+				Gx = 0; Gy = 0;
 				for(k = 0; k < 3; k++)
 					for(l = 0; l < 3; l++)
 						{
@@ -242,6 +249,100 @@ void Edge_Detection()
 {
 	ADNS3080_Frame_Capture();
 	Sobel_Operator();
+}
+
+///******************************************************************************
+//* function :		void Line_Detection_Hough()
+//* Description : 
+//*******************************************************************************/
+//const static float pi_Value = 3.1415926 / 30;
+//void Line_Detection_Hough()
+//{
+//	uint8_t i, j;
+//	float Theta, Radius;
+//	uint8_t Hough[30][30];
+//	uint8_t Radius_Value = 0, Theta_Value = 0;
+//	ADNS3080_Frame_Capture();
+//	for(i = 0; i < 30; i++)
+//		for(j = 0; j < 30; j++)
+//		{
+//			Theta = 0;
+//			for(Theta_Value = 0; Theta_Value < 30; Theta_Value ++)
+//			{
+//				Radius = ((i * COS(Theta) + j * SIN(Theta)) / 1.41421356 + 29) / 2;
+//				if(Radius > 29) Radius = 29;
+//				if(Radius < 0) Radius = 0;
+//				Radius_Value = (uint8_t) Radius;				
+//				Hough[Radius_Value][Theta_Value] = Get_Frame_Data_Matrix(i, j);				
+//				Theta += pi_Value;
+//			}
+//		}
+//	// From Hough space to Cartesian coordinates
+//	//to do	
+//}
+
+/******************************************************************************
+* function :		void Frame_Binaryzation()
+* Description : 
+*******************************************************************************/
+//uint8_t Frame_Binaryzation_Matrix[30][30];
+void Frame_Binaryzation()
+{
+	uint8_t i, j;
+ 	uint8_t Max = 0;
+ 	uint8_t Min = 255;
+	uint16_t Sum_H = 0;
+	uint16_t Sum_L = 0;
+	uint8_t Count_H = 0;
+	uint8_t Count_L = 0;
+	float Threshold, Threshold_Line;
+	
+ 	for(i = 0; i < 30; i++)
+		for(j = 0; j < 30; j++)
+         		{
+				if(Get_Frame_Data_Matrix(i, j) > Max) Max = Get_Frame_Data_Matrix(i, j);
+         			if(Get_Frame_Data_Matrix(i, j) < Min) Min = Get_Frame_Data_Matrix(i, j);
+			}
+	Threshold = (Max + Min) / 3;
+ 	Threshold_Line = Threshold;
+ 
+ 	for(i = 0; i < 30; i++)
+	{
+		for(j = 0; j < 30; j++)
+		{
+			if(Get_Frame_Data_Matrix(i, j) > Threshold_Line)
+			{
+				Sum_H += Get_Frame_Data_Matrix(i, j);
+				Count_H++;
+				//Frame_Binaryzation_Matrix(i, j) = 255;
+			}
+			if(Get_Frame_Data_Matrix(i, j) <= Threshold_Line)
+			{
+				Sum_L += Get_Frame_Data_Matrix(i, j);
+				Count_L++;
+				//Frame_Binaryzation_Matrix(i, j) = 0;
+			}
+		}
+		Threshold_Line = ((Sum_H / (Count_H + 0.0001)) + (Sum_L / (Count_L + 0.0001))) / 2;
+	}
+}
+
+/******************************************************************************
+* function :		void Line_Detection_()
+* Description : 	
+*******************************************************************************/
+void Line_Detection_()
+{
+
+}
+
+/******************************************************************************
+* function :		void Circle_Detection_()
+* Description : 	
+*******************************************************************************/
+void Circle_Detection_()
+{
+	
 }
 
 /******************************************************************************

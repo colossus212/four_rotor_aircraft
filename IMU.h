@@ -6,12 +6,17 @@
 #define RtA 	57.324841        //  180/3.1415  	
 #define AtR    	0.0174533		//  1/RtA        
 
+#define isnan(x)    ((x) != (x))
+
 struct _angle
 {
         float pitch;
         float roll;
         float yaw;
 };
+
+float COS(float x);
+float SIN(float x);
 
 void Prepare_Data(void);
 void Get_Attitude();

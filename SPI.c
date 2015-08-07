@@ -111,12 +111,14 @@ void SPI_Send_Byte(unsigned char txd)	//send Byte 2 * 8 = 16 us
 	for(i = 0; i < 8; i++)
 	{
 		SPI_SCLK = 0U;
-		delay_us(1); 
+		//delay_us(1);		
+		delay_250_ns();
 		SPI_MOSI = (txd & 0x80) >> 7;
 		txd <<= 1;	  
-		//delay_us(1);   
+			////delay_us(1);   
 		SPI_SCLK = 1U;
-		delay_us(1); 
+		//delay_us(1);		
+		delay_250_ns();
 	}
 }
 
@@ -130,12 +132,14 @@ uint8_t SPI_Receive_Byte()  // need 2 * 8 = 16 us
 	for(i = 0; i < 8; i++ )
 	{
 		SPI_SCLK = 0U;
-		delay_us(1);
+		//delay_us(1);		
+		delay_250_ns();
 		SPI_SCLK = 1U;
-		delay_us(1);
+		//delay_us(1);		
+		delay_250_ns();
 		receive <<= 1; 
 		if(SPI_MISO) receive++;
-		//delay_us(1);
+			////delay_us(1);
 	}
 	return receive;
 }

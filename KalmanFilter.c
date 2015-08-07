@@ -13,13 +13,11 @@
 #include "include.h"
 //#include "KalmanFilter.h"
 
-/***********************	
-	Q: process noise, Q increases, the dynamic response is fast, and the convergence stability is bad.
-	R: measurement noise, R increases, the dynamic response is slow, and the convergence is good.
-***********************/
 
+	//Q: process noise, Q increases, the dynamic response is fast, and the convergence stability is bad.
+	//R: measurement noise, R increases, the dynamic response is slow, and the convergence is good.
 #define KALMAN_Q 0.02
-#define KALMAN_R 1.0000	//6.0000
+#define KALMAN_R 2.0000	//6.0000
 
 KalmanFilter_Typedef Kalman_Ax, Kalman_Ay, Kalman_Az, Kalman_Gx, Kalman_Gy, Kalman_Gz;
 

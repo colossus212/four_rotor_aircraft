@@ -10,11 +10,16 @@
 		  void Flash_Height(); // this function should wait to run after Flash_Height_Prepare() 25ms
 		  
 		  // Trig connect to P5.3 (Pin 36)
-		  // Echo connect to TI06 (P0.6 as Pin 30)		 
+		  // Echo connect to TI06 (P0.6 as Pin 30)
+		  
+		  // to do at "Get_Height()"		 
+		  // the HCSR_Height and angle is not sampling at the same time
+			
 ************************************************/
 
 
 #include "include.h"
+#include <math.h>
 
 #define Trig P5.3
 
@@ -30,7 +35,11 @@ void HCSR04_Init()
 
 float Get_Height()
 {
-	return HCSR_Height;
+	float Height;  
+	Height = HCSR_Height / sqrt(tan(Get_Pitch() * AtR) * tan(Get_Pitch() * AtR) + tan(Get_Roll() * AtR) * tan(Get_Roll() * AtR) + 1);		
+	// the HCSR_Height and angle is not sampling at the same time
+	// to do
+	return Height;
 }
 
 

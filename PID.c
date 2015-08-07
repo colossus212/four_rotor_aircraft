@@ -26,7 +26,7 @@ PID_Typedef yaw_angle_PID;    //yaw角度环的PID
 PID_Typedef yaw_rate_PID;     //yaw角速率环的PID
 
 PID_Typedef	alt_PID;
-PID_Typedef alt_vel_PID;
+//PID_Typedef alt_vel_PID;
 
 
 
@@ -64,21 +64,21 @@ void PID_Parameter_Init()
 	alt_PID.ki = 0; //0.01
 	alt_PID.kd = 0; //1.7
 
-	alt_vel_PID.kp = 0; //1.7
-	alt_vel_PID.ki = 0; //0.01
-	alt_vel_PID.kd = 0; //0.22
+	//alt_vel_PID.kp = 0; //1.7
+	//alt_vel_PID.ki = 0; //0.01
+	//alt_vel_PID.kd = 0; //0.22
 
 	//limit for the max increment
-	pitch_angle_PID.integ_max = 100;
-	roll_angle_PID.integ_max = 100;
-	yaw_angle_PID.integ_max = 100;
+	pitch_angle_PID.integ_max = 500;
+	roll_angle_PID.integ_max = 500;
+	yaw_angle_PID.integ_max = 500;
 	
-	pitch_rate_PID.integ_max = 500;
-	roll_rate_PID.integ_max = 500;
-	yaw_rate_PID.integ_max = 500;
+	pitch_rate_PID.integ_max = 1000;
+	roll_rate_PID.integ_max = 1000;
+	yaw_rate_PID.integ_max = 1000;
 
-	alt_PID.integ_max = 200;
-	alt_vel_PID.integ_max = 200;
+	alt_PID.integ_max = 500;
+	//alt_vel_PID.integ_max = 1000;
 
 }
 
@@ -106,7 +106,7 @@ void PID_Position(PID_Typedef * PID,float target,float measure)
 	PID->output = (PID->kp * PID->error) + (PID->ki * PID->integ) + (PID->kd * PID->deriv);
 	
 	PID->preerror = PID->error;
-		
+	if(isnan(PID->output)) PID->output = 0.0f;		
 }
 
 
@@ -170,24 +170,26 @@ void PID_Position_Fuzzy(PID_Typedef * PID,float target,float measure)
 #if 0
 // 备份自 r_cg_serial_user.c ,用于控制飞机和调参
 //    
-//	switch(rx_data)
+//        	switch(rx_data)
 //	{
 //		case 0x11: 
 //		{
-//			Control_Standby();
+//			Control_Fly_Flag_Off();
 //			R_TAU0_Channel5_Stop();
 //			Motor_RateFlash(0, 0, 0, 0);
 //			MOTO1 = 0; MOTO2 = 0; MOTO3 = 0; MOTO4 = 0;
 //			TDR01 = 2000; TDR02 = 2000; TDR03 = 2000; TDR04 = 2000;
-//		} break;
-//		
-//		case 0x23: Control_Fly(); R_TAU0_Channel5_Start(); break;
+//		} break;		
 //		case 0x22:
 //		{
-//			Control_Fly(); R_TAU0_Channel5_Start();
-//			MOTO1 = 21000; MOTO2 = 21000; MOTO3 = 21000; MOTO4 = 21000;
+//			Control_Fly_Flag_On();
+//			R_TAU0_Channel5_Start();
+//			MOTO_THRESHOLD = 21000;
 //			Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
 //		} break;
+//		
+//		case 0x23: Control_Fly_Flag_On(); R_TAU0_Channel5_Start(); break;
+//		
 //		case 0x24:
 //		{
 //			MOTO1 += 1000; MOTO2 += 1000; MOTO3 += 1000; MOTO4 += 1000;
@@ -243,136 +245,136 @@ void PID_Position_Fuzzy(PID_Typedef * PID,float target,float measure)
 //			Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
 //		} break;
 //
-//		case 0x31: yaw_rate_PID.kp += 1; break;
-//		case 0x32: yaw_rate_PID.kp += 0.1; break;
-//		case 0x33: yaw_rate_PID.kp += 0.01; break;
+//		case 0x31: yaw_rate_PID.kp += 10; break;
+//		case 0x32: yaw_rate_PID.kp += 1; break;
+//		case 0x33: yaw_rate_PID.kp += 0.1; break;
 //		
-//		case 0x34: pitch_rate_PID.kp += 1; break;
-//		case 0x35: pitch_rate_PID.kp += 0.1; break;
-//		case 0x36: pitch_rate_PID.kp += 0.01; break;
+//		case 0x34: pitch_rate_PID.kp += 10; break;
+//		case 0x35: pitch_rate_PID.kp += 1; break;
+//		case 0x36: pitch_rate_PID.kp += 0.1; break;
 //		
-//		case 0x37: roll_rate_PID.kp += 1; break;
-//		case 0x38: roll_rate_PID.kp += 0.1; break;
-//		case 0x39: roll_rate_PID.kp += 0.01; break;		
+//		case 0x37: roll_rate_PID.kp += 10; break;
+//		case 0x38: roll_rate_PID.kp += 1; break;
+//		case 0x39: roll_rate_PID.kp += 0.1; break;		
 //
-//		case 0x3a: yaw_rate_PID.kp -= 0.1; break;
-//		case 0x3b: yaw_rate_PID.kp -= 0.01; break;
+//		case 0x3a: yaw_rate_PID.kp -= 1; break;
+//		case 0x3b: yaw_rate_PID.kp -= 0.1; break;
 //		
-//		case 0x3c: pitch_rate_PID.kp -= 0.1; break;
-//		case 0x3d: pitch_rate_PID.kp -= 0.01; break;
+//		case 0x3c: pitch_rate_PID.kp -= 1; break;
+//		case 0x3d: pitch_rate_PID.kp -= 0.1; break;
 //		
-//		case 0x3e: roll_rate_PID.kp -= 0.1; break;
-//		case 0x3f: roll_rate_PID.kp -= 0.01; break;
+//		case 0x3e: roll_rate_PID.kp -= 1; break;
+//		case 0x3f: roll_rate_PID.kp -= 0.1; break;
 //		
 //		
-//		case 0x41: yaw_rate_PID.ki += 0.1; break;
-//		case 0x42: yaw_rate_PID.ki += 0.01; break;
-//		case 0x43: yaw_rate_PID.ki += 0.001; break;
+//		case 0x41: yaw_rate_PID.ki += 1; break;
+//		case 0x42: yaw_rate_PID.ki += 0.1; break;
+//		case 0x43: yaw_rate_PID.ki += 0.01; break;
 //		
-//		case 0x44: pitch_rate_PID.ki += 0.1; break;
-//		case 0x45: pitch_rate_PID.ki += 0.01; break;
-//		case 0x46: pitch_rate_PID.ki += 0.001; break;
+//		case 0x44: pitch_rate_PID.ki += 1; break;
+//		case 0x45: pitch_rate_PID.ki += 0.1; break;
+//		case 0x46: pitch_rate_PID.ki += 0.01; break;
 //		
-//		case 0x47: roll_rate_PID.ki += 0.1; break;
-//		case 0x48: roll_rate_PID.ki += 0.01; break;
-//		case 0x49: roll_rate_PID.ki += 0.001; break;		
+//		case 0x47: roll_rate_PID.ki += 1; break;
+//		case 0x48: roll_rate_PID.ki += 0.1; break;
+//		case 0x49: roll_rate_PID.ki += 0.01; break;		
 //
-//		case 0x4a: yaw_rate_PID.ki -= 0.01; break;
-//		case 0x4b: yaw_rate_PID.ki -= 0.001; break;
+//		case 0x4a: yaw_rate_PID.ki -= 0.1; break;
+//		case 0x4b: yaw_rate_PID.ki -= 0.01; break;
 //		
-//		case 0x4c: pitch_rate_PID.ki -= 0.01; break;
-//		case 0x4d: pitch_rate_PID.ki -= 0.001; break;
+//		case 0x4c: pitch_rate_PID.ki -= 0.1; break;
+//		case 0x4d: pitch_rate_PID.ki -= 0.01; break;
 //		
-//		case 0x4e: roll_rate_PID.ki -= 0.01; break;
-//		case 0x4f: roll_rate_PID.ki -= 0.001; break;
+//		case 0x4e: roll_rate_PID.ki -= 0.1; break;
+//		case 0x4f: roll_rate_PID.ki -= 0.01; break;
 //		
 //		
-//		case 0x51: yaw_rate_PID.kd += 0.1; break;
-//		case 0x52: yaw_rate_PID.kd += 0.01; break;
-//		case 0x53: yaw_rate_PID.kd += 0.001; break;
+//		case 0x51: yaw_rate_PID.kd += 1; break;
+//		case 0x52: yaw_rate_PID.kd += 0.1; break;
+//		case 0x53: yaw_rate_PID.kd += 0.01; break;
 //
-//		case 0x54: pitch_rate_PID.kd += 0.1; break;
-//		case 0x55: pitch_rate_PID.kd += 0.01; break;
-//		case 0x56: pitch_rate_PID.kd += 0.001; break;
+//		case 0x54: pitch_rate_PID.kd += 1; break;
+//		case 0x55: pitch_rate_PID.kd += 0.1; break;
+//		case 0x56: pitch_rate_PID.kd += 0.01; break;
 //		
-//		case 0x57: roll_rate_PID.kd += 0.1; break;
-//		case 0x58: roll_rate_PID.kd += 0.01; break;
-//		case 0x59: roll_rate_PID.kd += 0.001; break;
+//		case 0x57: roll_rate_PID.kd += 1; break;
+//		case 0x58: roll_rate_PID.kd += 0.1; break;
+//		case 0x59: roll_rate_PID.kd += 0.01; break;
 //
-//		case 0x5a: yaw_rate_PID.kd -= 0.01; break;
-//		case 0x5b: yaw_rate_PID.kd -= 0.001; break;
+//		case 0x5a: yaw_rate_PID.kd -= 0.1; break;
+//		case 0x5b: yaw_rate_PID.kd -= 0.01; break;
 //		
-//		case 0x5c: pitch_rate_PID.kd -= 0.01; break;
-//		case 0x5d: pitch_rate_PID.kd -= 0.001; break;
+//		case 0x5c: pitch_rate_PID.kd -= 0.1; break;
+//		case 0x5d: pitch_rate_PID.kd -= 0.01; break;
 //		
-//		case 0x5e: roll_rate_PID.kd -= 0.01; break;
-//		case 0x5f: roll_rate_PID.kd -= 0.001; break;
+//		case 0x5e: roll_rate_PID.kd -= 0.1; break;
+//		case 0x5f: roll_rate_PID.kd -= 0.01; break;
 //		
 //		
-//		case 0x61: yaw_angle_PID.kp += 1; break;
-//		case 0x62: yaw_angle_PID.kp += 0.1; break;
-//		case 0x63: yaw_angle_PID.kp += 0.01; break;
+//		case 0x61: yaw_angle_PID.kp += 10; break;
+//		case 0x62: yaw_angle_PID.kp += 1; break;
+//		case 0x63: yaw_angle_PID.kp += 0.1; break;
 //
-//		case 0x64: pitch_angle_PID.kp += 1; break;
-//		case 0x65: pitch_angle_PID.kp += 0.1; break;
-//		case 0x66: pitch_angle_PID.kp += 0.01; break;
+//		case 0x64: pitch_angle_PID.kp += 10; break;
+//		case 0x65: pitch_angle_PID.kp += 1; break;
+//		case 0x66: pitch_angle_PID.kp += 0.1; break;
 //		
-//		case 0x67: roll_angle_PID.kp += 1; break;
-//		case 0x68: roll_angle_PID.kp += 0.1; break;
-//		case 0x69: roll_angle_PID.kp += 0.01; break;
+//		case 0x67: roll_angle_PID.kp += 10; break;
+//		case 0x68: roll_angle_PID.kp += 1; break;
+//		case 0x69: roll_angle_PID.kp += 0.1; break;
 //
-//		case 0x6a: yaw_angle_PID.kp -= 0.1; break;
-//		case 0x6b: yaw_angle_PID.kp -= 0.01; break;
+//		case 0x6a: yaw_angle_PID.kp -= 1; break;
+//		case 0x6b: yaw_angle_PID.kp -= 0.1; break;
 //		
-//		case 0x6c: pitch_angle_PID.kp -= 0.1; break;
-//		case 0x6d: pitch_angle_PID.kp -= 0.01; break;
+//		case 0x6c: pitch_angle_PID.kp -= 1; break;
+//		case 0x6d: pitch_angle_PID.kp -= 0.1; break;
 //		
-//		case 0x6e: roll_angle_PID.kp -= 0.1; break;
-//		case 0x6f: roll_angle_PID.kp -= 0.01; break;
+//		case 0x6e: roll_angle_PID.kp -= 1; break;
+//		case 0x6f: roll_angle_PID.kp -= 0.1; break;
 //		
 //		
-//		case 0x71: yaw_angle_PID.ki += 0.1; break;
-//		case 0x72: yaw_angle_PID.ki += 0.01; break;
-//		case 0x73: yaw_angle_PID.ki += 0.001; break;
+//		case 0x71: yaw_angle_PID.ki += 1; break;
+//		case 0x72: yaw_angle_PID.ki += 0.1; break;
+//		case 0x73: yaw_angle_PID.ki += 0.01; break;
 //
-//		case 0x74: pitch_angle_PID.ki += 0.1; break;
-//		case 0x75: pitch_angle_PID.ki += 0.01; break;
-//		case 0x76: pitch_angle_PID.ki += 0.001; break;
+//		case 0x74: pitch_angle_PID.ki += 1; break;
+//		case 0x75: pitch_angle_PID.ki += 0.1; break;
+//		case 0x76: pitch_angle_PID.ki += 0.01; break;
 //		
-//		case 0x77: roll_angle_PID.ki += 0.1; break;
-//		case 0x78: roll_angle_PID.ki += 0.01; break;
-//		case 0x79: roll_angle_PID.ki += 0.001; break;
+//		case 0x77: roll_angle_PID.ki += 1; break;
+//		case 0x78: roll_angle_PID.ki += 0.1; break;
+//		case 0x79: roll_angle_PID.ki += 0.01; break;
 //
-//		case 0x7a: yaw_angle_PID.ki -= 0.01; break;
-//		case 0x7b: yaw_angle_PID.ki -= 0.001; break;
+//		case 0x7a: yaw_angle_PID.ki -= 0.1; break;
+//		case 0x7b: yaw_angle_PID.ki -= 0.01; break;
 //		
-//		case 0x7c: pitch_angle_PID.ki -= 0.01; break;
-//		case 0x7d: pitch_angle_PID.ki -= 0.001; break;
+//		case 0x7c: pitch_angle_PID.ki -= 0.1; break;
+//		case 0x7d: pitch_angle_PID.ki -= 0.01; break;
 //		
-//		case 0x7e: roll_angle_PID.ki -= 0.01; break;
-//		case 0x7f: roll_angle_PID.ki -= 0.001; break;
+//		case 0x7e: roll_angle_PID.ki -= 0.1; break;
+//		case 0x7f: roll_angle_PID.ki -= 0.01; break;
 //		
 //		
-//		case 0x81: yaw_angle_PID.kd += 0.1; break;
-//		case 0x82: yaw_angle_PID.kd += 0.01; break;
-//		case 0x83: yaw_angle_PID.kd += 0.001; break;
+//		case 0x81: yaw_angle_PID.kd += 1; break;
+//		case 0x82: yaw_angle_PID.kd += 0.1; break;
+//		case 0x83: yaw_angle_PID.kd += 0.01; break;
 //
-//		case 0x84: pitch_angle_PID.kd += 0.1; break;
-//		case 0x85: pitch_angle_PID.kd += 0.01; break;
-//		case 0x86: pitch_angle_PID.kd += 0.001; break;
+//		case 0x84: pitch_angle_PID.kd += 1; break;
+//		case 0x85: pitch_angle_PID.kd += 0.1; break;
+//		case 0x86: pitch_angle_PID.kd += 0.01; break;
 //		
-//		case 0x87: roll_angle_PID.kd += 0.1; break;
-//		case 0x88: roll_angle_PID.kd += 0.01; break;
-//		case 0x89: roll_angle_PID.kd += 0.001; break;
+//		case 0x87: roll_angle_PID.kd += 1; break;
+//		case 0x88: roll_angle_PID.kd += 0.1; break;
+//		case 0x89: roll_angle_PID.kd += 0.01; break;
 //
-//		case 0x8a: yaw_angle_PID.kd -= 0.01; break;
-//		case 0x8b: yaw_angle_PID.kd -= 0.001; break;
+//		case 0x8a: yaw_angle_PID.kd -= 0.1; break;
+//		case 0x8b: yaw_angle_PID.kd -= 0.01; break;
 //		
-//		case 0x8c: pitch_angle_PID.kd -= 0.01; break;
-//		case 0x8d: pitch_angle_PID.kd -= 0.001; break;
+//		case 0x8c: pitch_angle_PID.kd -= 0.1; break;
+//		case 0x8d: pitch_angle_PID.kd -= 0.01; break;
 //		
-//		case 0x8e: roll_angle_PID.kd -= 0.01; break;
-//		case 0x8f: roll_angle_PID.kd -= 0.001; break;
+//		case 0x8e: roll_angle_PID.kd -= 0.1; break;
+//		case 0x8f: roll_angle_PID.kd -= 0.01; break;
 //		
 //		
 //		case 0x91: Roll_Target = 0; break;

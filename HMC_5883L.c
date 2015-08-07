@@ -23,8 +23,10 @@
 
 float X_HMC,Y_HMC,Z_HMC,x,y,z;
 
-float x_offset = 0, y_offset = 0, z_offset = 0, x_gain = 1, y_gain = 1, z_gain = 1;
+//float x_offset = 0, y_offset = 0, z_offset = 0, x_gain = 1, y_gain = 1, z_gain = 1;
 //float x_offset = 31.8836, y_offset = - 147.1236, z_offset = 329.2807, x_gain = 386.0970, y_gain = 432.0223, z_gain = 362.6828;
+
+float x_offset = 189.8817, y_offset = - 96.9144, z_offset = 77.0083, x_gain = 368.2151, y_gain = 395.9817, z_gain = 363.5229;
 
 //int16_t X_BUFF[FILL_NUM],Y_BUFF[FILL_NUM],Z_BUFF[FILL_NUM];
 

@@ -23,7 +23,7 @@
 #define MOTO3_duty TDR03
 #define MOTO4_duty TDR04
 
-#define MOTO_Max 40000  // test percent: 40000 / 50000 = 80 %
+#define MOTO_Max 30000  // test percent: 30000 / 50000 = 60 %
 float MOTO_PWM_ZeroOffset;
 float MOTO_PWM_RatioOffset;
 
@@ -47,7 +47,7 @@ void Motor_Init()
 功能:	更新四路PWM值
 输入:	MOTO1, MOTO2, MOTO3, MOTO4
 输出:	无
-描述：	#define MOTO_Max 1000
+描述：	#define MOTO_Max 50000
 	MOTO 1-4 输入范围均为 0 - MOTO_Max
 	
 ***********************************************/

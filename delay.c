@@ -13,6 +13,11 @@
 
 // #define delay_time_i 2
 
+void delay_250_ns()
+{
+	NOP(); NOP(); //NOP(); NOP();
+	//NOP(); NOP(); //NOP(); NOP();
+}
 void delay_us(uint16_t t)
 {
 	uint8_t i;
