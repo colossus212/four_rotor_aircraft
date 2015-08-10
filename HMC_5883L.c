@@ -21,28 +21,37 @@
 #define  FILL_NUM  10
 
 
-float X_HMC,Y_HMC,Z_HMC,x,y,z;
+float X_HMC,Y_HMC,Z_HMC;
 
 //float x_offset = 0, y_offset = 0, z_offset = 0, x_gain = 1, y_gain = 1, z_gain = 1;
 //float x_offset = 31.8836, y_offset = - 147.1236, z_offset = 329.2807, x_gain = 386.0970, y_gain = 432.0223, z_gain = 362.6828;
 
-float x_offset = 189.8817, y_offset = - 96.9144, z_offset = 77.0083, x_gain = 368.2151, y_gain = 395.9817, z_gain = 363.5229;
+const float x_offset = 189.8817, y_offset = - 96.9144, z_offset = 77.0083, x_gain = 368.2151, y_gain = 395.9817, z_gain = 363.5229;
 
 //int16_t X_BUFF[FILL_NUM],Y_BUFF[FILL_NUM],Z_BUFF[FILL_NUM];
 
 float Get_HMC5883L_Hx()
 {
-	return X_HMC;
+	float Hx;
+	Hx = X_HMC;
+	Hx = KalmanFilter(Hx, & Kalman_Hx);
+	return Hx;
 }
 
 float Get_HMC5883L_Hy()
 {
-	return Y_HMC;
+	float Hy;
+	Hy = Y_HMC;
+	Hy = KalmanFilter(Hy, & Kalman_Hy);
+	return Hy;
 }
 
 float Get_HMC5883L_Hz()
 {
-	return Z_HMC;
+	float Hz;
+	Hz = Z_HMC;
+	Hz = KalmanFilter(Hz, & Kalman_Hz);
+	return Hz;
 }
 
 uint8_t HMC5883L_Init(void)
@@ -56,6 +65,7 @@ uint8_t HMC5883L_Init(void)
 
 void Multiple_Read_HMC5883L(void)
 {      	
+	float x,y,z;
  	//uint8_t i;
 	uint8_t BUF[8];
 	//static uint8_t filter_cnt = 0;
@@ -86,22 +96,22 @@ void Multiple_Read_HMC5883L(void)
 //	Y_HMC = y_gain * y + y_offset;
 //	Z_HMC = 1.073 * (z +30);
 
-	X_HMC = (x - x_offset) / x_gain; //* 300;
-	Y_HMC = (y - y_offset) / y_gain; //* 300;
-	Z_HMC = (z - y_offset) / z_gain; //* 300;
+	X_HMC = (x - x_offset) / x_gain * 300;
+	Y_HMC = (y - y_offset) / y_gain * 300;
+	Z_HMC = (z - y_offset) / z_gain * 300;
 	
 }
 
 
 //float x_max = 258, x_min = - 236, y_max = 189, y_min = -334;
-void HMC5883L_Calibration()
-{
-	float x_max = 0, x_min = 0, y_max = 0, y_min = 0;
-	if(x > x_max) x_max = x;
-	if(x < x_min) x_min = x;
-	if(y > y_max) y_max = y;
-	if(y < y_min) y_min = y;
-	y_gain = (x_max - x_min) / (y_max - y_min);
-	x_offset = x_gain * (0.5 * (x_max - x_min) - x_max);
-	y_offset = y_gain * (0.5 * (y_max - y_min) - y_max);
-}
+//void HMC5883L_Calibration()
+//{
+//	float x_max = 0, x_min = 0, y_max = 0, y_min = 0;
+//	if(x > x_max) x_max = x;
+//	if(x < x_min) x_min = x;
+//	if(y > y_max) y_max = y;
+//	if(y < y_min) y_min = y;
+//	y_gain = (x_max - x_min) / (y_max - y_min);
+//	x_offset = x_gain * (0.5 * (x_max - x_min) - x_max);
+//	y_offset = y_gain * (0.5 * (y_max - y_min) - y_max);
+//}

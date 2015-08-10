@@ -357,8 +357,11 @@ void ADNS3080_Frame_Data_Correct()
 	uint16_t i;
 
 	if( ((Frame_Data[0]) & 0x40) == 0x40) 
+	{
 		Frame_Data_Correct = 1;
-		else Frame_Data_Correct = 0;
+		Frame_Data[0] = Frame_Data[0] & (~0x40);
+	}
+	else Frame_Data_Correct = 0;
 	//if( ((Frame_Data[0][0]) & 0x40) == 0x40) 
 	//	Frame_Data_Correct = 1;
 	//	else Frame_Data_Correct = 0;
@@ -389,4 +392,11 @@ uint8_t Get_Frame_Data(uint8_t count)
 uint8_t Get_Frame_Data_Matrix(uint8_t i, uint8_t j)
 {
 	return Frame_Data[i * 30 + j];
+}
+
+uint8_t * Get_Frame_Data_Pointer(uint8_t i, uint8_t j)
+{
+	uint8_t * Pointer;
+	Pointer = &(Frame_Data[i * 30 + j]);
+	return Pointer;
 }

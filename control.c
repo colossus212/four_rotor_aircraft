@@ -11,44 +11,49 @@
 #include "include.h"
 #include  <math.h>
 
-#define MOTO_MAX 28000
-#define MOTO_MIN 6000
+#define MOTO_MAX 35000
+#define MOTO_MIN 20000
+		//6000
 
 #if 0
 //r_cg_timer_user.c中 __interrupt static void r_tau0_channel5_interrupt(void)的备份
 	//中断控制：
-//uint16_t height, tempr = 0, press = 0, IMUpersec = 100;
-////	uint8_t Mag_Buf[8];
-//	if(Count_for_Timer_8 == 8)
+//if(Count_for_Timer_8 == 8)
 //	{
-////		Flash_Height();
-////		Control_Heigh(170);
 //		Count_for_Timer_8 = 0;
-////		Mag_Buf[0] = 0xAA;
-////		Mag_Buf[1] = ((int16_t)(Get_HMC5883L_Hx())) >> 8;
-////		Mag_Buf[2] = ((int16_t)(Get_HMC5883L_Hx()));
-////		Mag_Buf[3] = ((int16_t)(Get_HMC5883L_Hy())) >> 8;
-////		Mag_Buf[4] = ((int16_t)(Get_HMC5883L_Hy()));
-////		Mag_Buf[5] = ((int16_t)(Get_HMC5883L_Hz())) >> 8;
-////		Mag_Buf[6] = ((int16_t)(Get_HMC5883L_Hz()));
-////		Mag_Buf[7] = 0xBB;
-////		R_UART0_Send(Mag_Buf, 8);
+////		Flash_Height();
+////		Control_Heigh(Height_Target); // Initialization value is 100 (cm)
 //
-//		AHRS_Captain_Flight_Motion((int16_t)(Get_DMP_Acc_x()), (int16_t)(Get_DMP_Acc_y()), (int16_t)(Get_DMP_Acc_z()),
-//			(int16_t)(Get_DMP_Gyro_x()), (int16_t)(Get_DMP_Gyro_y()), (int16_t)(Get_DMP_Gyro_z()),
-//			(int16_t)(Get_HMC5883L_Hx()), (int16_t)(Get_HMC5883L_Hy()), (int16_t)(Get_HMC5883L_Hz()));
-//
-//		R_UART0_Send(Uart_Buf_Motion, 24);		
-////		Control_Track();
+//		//Control_Track();
 //	}
 //	
-//	if(Count_for_Timer_8 == 4)
-//	{
-//		AHRS_Captain_Flight_IMU((int16_t)(10 * Get_Yaw()), (int16_t)(10 * Get_Pitch()), (int16_t)(10 * Get_Roll()),
-//				height, tempr, press, IMUpersec);
-//		R_UART0_Send(Uart_Buf_IMU, 18);
-//	}
-//	
+////	if(Count_for_Timer_8 == 6)
+////	{
+////		;
+////	}
+////	if(Count_for_Timer_8 == 5)
+////	{
+////		;
+////	}
+////	if(Count_for_Timer_8 == 4)
+////	{
+////		GY953_Get_Mag();
+////	}	
+////	if(Count_for_Timer_8 == 3)
+////	{
+////		GY953_Get_Gyro();
+////	}
+////	
+////	if(Count_for_Timer_8 == 2)
+////	{
+////		GY953_Get_Accl();
+////	}
+////	
+////	if(Count_for_Timer_8 == 1)
+////	{
+////		GY953_Get_RPY();
+////	}	
+//
 //	if(Count_for_Timer_8 == 0)
 //	{
 ////		Flash_Height_Prepare();
@@ -57,12 +62,12 @@
 //	//Get_Attitude();  // haven't use DMP
 //	
 //	Get_Attitude_DMP();
-//	
-////	height = Get_Height();	
 //
-//	Control_Posture(0, 0, 0);
+////	height = Get_Height();
+//
+//	Control_Posture(Roll_Target, Pitch_Target, Yaw_Target);
+//
 //	Count_for_Timer_8++;
-//	
 //	
 //     //P13.0 = ~P13.0;
 #endif
@@ -72,6 +77,7 @@
 
 
 uint8_t Fly_flag;
+uint8_t Land_Flag = 0;
 volatile float MOTO1 = 0, MOTO2 = 0, MOTO3 = 0, MOTO4 = 0;
 float MOTO_THRESHOLD = 0;
 float Roll_Target = 0, Pitch_Target = 0, Yaw_Target = 0, Height_Target = 100;
@@ -133,10 +139,10 @@ void Control_Posture(float roll, float pitch, float yaw)
 		/* 1: MOTO1			 2: MOTO1	  */
 		/* 3: MOTO3			 4: MOTO4	  */	
 		
-		MOTO1 = MOTO_THRESHOLD - pitch_rate_PID.output - roll_rate_PID.output + yaw_rate_PID.output;
-		MOTO2 = MOTO_THRESHOLD + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output;
-		MOTO3 = MOTO_THRESHOLD + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output;
-		MOTO4 = MOTO_THRESHOLD - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output;
+		MOTO1 = MOTO_THRESHOLD - pitch_rate_PID.output - roll_rate_PID.output + yaw_rate_PID.output + alt_PID.output;
+		MOTO2 = MOTO_THRESHOLD + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output + alt_PID.output;
+		MOTO3 = MOTO_THRESHOLD + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output + alt_PID.output;
+		MOTO4 = MOTO_THRESHOLD - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output + alt_PID.output;
 		
 	MOTO_Limiter();
 
@@ -152,18 +158,21 @@ void Control_Heigh(float H)		//期望值,单位cm
 	PID_Incremental( & alt_PID, H, Get_Height());	
 	
 		//油门控制
-	MOTO1 +=  alt_PID.output;
-	MOTO2 +=  alt_PID.output;
-	MOTO3 +=  alt_PID.output;
-	MOTO4 +=  alt_PID.output;
-	
-	MOTO_Limiter();
-
-	if(Fly_flag == 1) Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
-	else    Motor_RateFlash(0, 0, 0, 0);
+//	MOTO1 +=  alt_PID.output;
+//	MOTO2 +=  alt_PID.output;
+//	MOTO3 +=  alt_PID.output;
+//	MOTO4 +=  alt_PID.output;
+//	
+//	MOTO_Limiter();
+//
+//	if(Fly_flag == 1) Motor_RateFlash(MOTO1, MOTO2, MOTO3, MOTO4);
+//	else    Motor_RateFlash(0, 0, 0, 0);
 }
 
-
+uint8_t Get_Fly_Flag()
+{
+	return Fly_flag;
+}
 void Control_Fly_Flag_Off()
 {
 	Fly_flag = 0;
@@ -183,21 +192,44 @@ void Control_Track()
 void Control_Fly()
 {
 	R_TAU0_Channel5_Start();
-	delay_ms(500);
-	MOTO_THRESHOLD = 21000;
-	Motor_RateFlash(MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD);
 	delay_ms(100);
-	Control_Fly_Flag_On();
-	R_TAU0_Channel5_Start();			
+	MOTO_THRESHOLD = 27500; //27500;
+	Motor_RateFlash(MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD);
+	//delay_ms(100);
+	delay_ms(10);	
+	Control_Fly_Flag_On();			
+}
+
+void Control_Test()
+{
+	MOTO_THRESHOLD = 7500;
+	Motor_RateFlash(MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD);
 }
 
 void Control_Land()
 {
-	Height_Target = Get_Height();
-	while(Get_Height() == 20)
+	if(Get_Height() > 28)
 	{
-		Height_Target -= 5;
-		delay_ms(100);
+		Height_Target = Get_Height() - 5;
+		Control_Heigh(Height_Target);
 	}
+	if(Get_Height() <= 28)
+	{
+		Control_Heigh(23.0);
+		if(Get_Height() <= 16.0)
+		{
+			Motor_RateFlash(18000, 18000, 18000, 18000);
+			delay_s(1);
+			Motor_RateFlash(0, 0, 0, 0);
+		}
+	}
+}
+
+void Control_Free_Land()
+{
+	R_TAU0_Channel5_Stop();
+	MOTO_THRESHOLD = 0;
 	Motor_RateFlash(0, 0, 0, 0);
+	MOTO1 = 0; MOTO2 = 0; MOTO3 = 0; MOTO4 = 0;
+	TDR01 = 2000; TDR02 = 2000; TDR03 = 2000; TDR04 = 2000;
 }

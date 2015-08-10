@@ -16,6 +16,9 @@
 
 struct _angle angle;
 const static float pi = 3.1415926;
+float Xr,Yr;
+
+
 
 //   快速求平方根倒数
 
@@ -28,7 +31,7 @@ float Q_rsqrt(float number)
 	x2 = number * 0.5F;
 	y  = number;
 	i  = * ( long * ) &y;                      
-	i  = 0x5f3759df - ( i >> 1 );    //???这是神马？           
+	i  = 0x5f3759df - ( i >> 1 );           
 	y  = * ( float * ) &i;
 	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration （第一次牛顿迭代）
 	return y;
@@ -86,126 +89,126 @@ float VariableParameter(float error)
 }
 /*************************************/
 
-void Prepare_Data(void)
-{       
-	MPU6050_Read_RawData();         //读取6050
-	Multiple_Read_HMC5883L();   //读取地磁数据
-
-//	Get_MPU6050_Ax() = KalmanFilter(Get_MPU6050_Ax(), & Kalman_Ax);
-//	Get_MPU6050_Ay() = KalmanFilter(Get_MPU6050_Ay(), & Kalman_Ay);
-//	Get_MPU6050_Az() = KalmanFilter(Get_MPU6050_Az(), & Kalman_Az);
-	
-}
-
-
-//四元数
-float qa0, qa1, qa2, qa3;     //四元数法  得到当前姿态
-#define Kp 0.8f               // 比例积分控制器的P  proportional gain governs rate of convergence to accelerometer比例增益控制收敛速度的加速度计/magnetometer 磁强计
-#define Ki 0.0015f            // 比例积分控制器的I     integral gain governs rate of convergence of gyroscope biases
-
-#define halfT 0.005f        //姿态更新周期，一般是四元数微分求解时用的。 采样周期的一半  本程序 10 MS 采集一次  所以 halfT是 5 MS
-
-/**************************************
- * 函数名：Get_Attitude()
- * 描述  ：得到当前姿态
- * 输入  ：无
- * 输出  ：无
- * 调用  ：外部调用
- *************************************/
-void Get_Attitude()
-{
-	Prepare_Data();
-	
-	IMUupdate(Get_MPU6050_Gx() * AtR, Get_MPU6050_Gy() * AtR, Get_MPU6050_Gz() * AtR, Get_MPU6050_Ax(), Get_MPU6050_Ay(), Get_MPU6050_Az());	
-}
-
-float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
-float exInt = 0, eyInt = 0, ezInt = 0;    // scaled integral error	 误差中间变量
-float vx, vy, vz;// wx, wy, wz;	 当前姿态在竖直方向上的分量（N坐标中的竖直分量在B坐标系中的表示）
-float Xr,Yr;
-
-
-void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
-{
-  float norm;	//计算空间向量的范数的中间变量
-	
-  
-  float ex, ey, ez;	//加速度计表示的旋转和当前姿态在竖直方向上的分量在B坐标中的向量外积差
-
-  // 先把这些用得到的值算好
-  float q0q0 = q0*q0;
-  float q0q1 = q0*q1;
-  float q0q2 = q0*q2;
-  //  float q0q3 = q0*q3;//
-  float q1q1 = q1*q1;
-  //  float q1q2 = q1*q2;//
-  float q1q3 = q1*q3;
-  float q2q2 = q2*q2;
-  float q2q3 = q2*q3;
-  float q3q3 = q3*q3;
-	
-	if(ax*ay*az==0)
- 		return;
-		
-  norm = Q_rsqrt(ax*ax + ay*ay + az*az);       //acc数据归一化处理
-  ax = ax *norm;
-  ay = ay * norm;
-  az = az * norm;
-
-  // estimated direction of gravity and flux (v and w)              估计重力方向和流量/变迁
-  
-  vx = 2*(q1q3 - q0q2);						//四元素中xyz的表示
-  vy = 2*(q0q1 + q2q3);
-  vz = q0q0 - q1q1 - q2q2 + q3q3 ;
-
-  // error is sum of cross product between reference direction of fields and direction measured by sensors
-  ex = (ay*vz - az*vy) ;                           		 //向量外积在相减得到差分就是误差
-  ey = (az*vx - ax*vz) ;
-  ez = (ax*vy - ay*vx) ;
-
-  exInt = exInt + VariableParameter(ex) * Ki;		//对误差进行积分
-  eyInt = eyInt + VariableParameter(ey) * Ki;
-  ezInt = ezInt + VariableParameter(ez) * Ki;
-// adjusted gyroscope measurements
-
-	gx = gx + Kp *  VariableParameter(ex) + exInt;			  //修正过后的陀螺仪的xyz
-	gy = gy + Kp *  VariableParameter(ey) + eyInt;	
-	gz = gz + Kp *  VariableParameter(ez) + ezInt;	
-  								
-  // integrate quaternion rate and normalise			  //四元素的微分方程	，四元数的更新
-  q0 = q0 + (-q1*gx - q2*gy - q3*gz)*halfT;
-  q1 = q1 + (q0*gx + q2*gz - q3*gy)*halfT;
-  q2 = q2 + (q0*gy - q1*gz + q3*gx)*halfT;
-  q3 = q3 + (q0*gz + q1*gy - q2*gx)*halfT;
-
-  // normalise quaternion	   正常化的四元数
-  norm = Q_rsqrt(q0q0 + q1q1 + q2q2 + q3q3);
-  q0 = q0 * norm;
-  q1 = q1 * norm;
-  q2 = q2 * norm;
-  q3 = q3 * norm;
-
-  qa0 = q0;
-  qa1 = q1;
-  qa2 = q2;
-  qa3 = q3;
-
-
+//void Prepare_Data(void)
+//{       
+//	MPU6050_Read_RawData();         //读取6050
+//	Multiple_Read_HMC5883L();   //读取地磁数据
+//
+////	Get_MPU6050_Ax() = KalmanFilter(Get_MPU6050_Ax(), & Kalman_Ax);
+////	Get_MPU6050_Ay() = KalmanFilter(Get_MPU6050_Ay(), & Kalman_Ay);
+////	Get_MPU6050_Az() = KalmanFilter(Get_MPU6050_Az(), & Kalman_Az);
 //	
-  	angle.roll = asin(-2*q1q3 + 2*q0q2); // pitch
-	angle.pitch = atan2(2*q2q3 + 2*q0q1, -2*q1q1 - 2*q2q2 + 1); // roll
-	
-	/*          关于地磁如何进行倾角补偿                       */    
-	/*参考  http://baike.baidu.com/view/1239157.htm?fr=aladdin */
-	
-	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hy() * SIN(angle.roll) * SIN(-angle.pitch) - Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
-	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hz() * SIN(-angle.pitch);
-	
-	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA; // yaw 
-	angle.roll *= RtA;
-	angle.pitch *= RtA;
+//}
+//
+//
+////四元数
+//float qa0, qa1, qa2, qa3;     //四元数法  得到当前姿态
+//#define Kp 0.8f               // 比例积分控制器的P  proportional gain governs rate of convergence to accelerometer比例增益控制收敛速度的加速度计/magnetometer 磁强计
+//#define Ki 0.0015f            // 比例积分控制器的I     integral gain governs rate of convergence of gyroscope biases
+//
+//#define halfT 0.005f        //姿态更新周期，一般是四元数微分求解时用的。 采样周期的一半  本程序 10 MS 采集一次  所以 halfT是 5 MS
+//
+///**************************************
+// * 函数名：Get_Attitude()
+// * 描述  ：得到当前姿态
+// * 输入  ：无
+// * 输出  ：无
+// * 调用  ：外部调用
+// *************************************/
+//void Get_Attitude()
+//{
+//	Prepare_Data();
+//	
+//	IMUupdate(Get_MPU6050_Gx() * AtR, Get_MPU6050_Gy() * AtR, Get_MPU6050_Gz() * AtR, Get_MPU6050_Ax(), Get_MPU6050_Ay(), Get_MPU6050_Az());	
+//}
+//
+//float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
+//float exInt = 0, eyInt = 0, ezInt = 0;    // scaled integral error	 误差中间变量
+//float vx, vy, vz;// wx, wy, wz;	 当前姿态在竖直方向上的分量（N坐标中的竖直分量在B坐标系中的表示）
 
-}
+//
+//
+//void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
+//{
+//  float norm;	//计算空间向量的范数的中间变量
+//	
+//  
+//  float ex, ey, ez;	//加速度计表示的旋转和当前姿态在竖直方向上的分量在B坐标中的向量外积差
+//
+//  // 先把这些用得到的值算好
+//  float q0q0 = q0*q0;
+//  float q0q1 = q0*q1;
+//  float q0q2 = q0*q2;
+//  //  float q0q3 = q0*q3;//
+//  float q1q1 = q1*q1;
+//  //  float q1q2 = q1*q2;//
+//  float q1q3 = q1*q3;
+//  float q2q2 = q2*q2;
+//  float q2q3 = q2*q3;
+//  float q3q3 = q3*q3;
+//	
+//	if(ax*ay*az==0)
+// 		return;
+//		
+//  norm = Q_rsqrt(ax*ax + ay*ay + az*az);       //acc数据归一化处理
+//  ax = ax *norm;
+//  ay = ay * norm;
+//  az = az * norm;
+//
+//  // estimated direction of gravity and flux (v and w)              估计重力方向和流量/变迁
+//  
+//  vx = 2*(q1q3 - q0q2);						//四元素中xyz的表示
+//  vy = 2*(q0q1 + q2q3);
+//  vz = q0q0 - q1q1 - q2q2 + q3q3 ;
+//
+//  // error is sum of cross product between reference direction of fields and direction measured by sensors
+//  ex = (ay*vz - az*vy) ;                           		 //向量外积在相减得到差分就是误差
+//  ey = (az*vx - ax*vz) ;
+//  ez = (ax*vy - ay*vx) ;
+//
+//  exInt = exInt + VariableParameter(ex) * Ki;		//对误差进行积分
+//  eyInt = eyInt + VariableParameter(ey) * Ki;
+//  ezInt = ezInt + VariableParameter(ez) * Ki;
+//// adjusted gyroscope measurements
+//
+//	gx = gx + Kp *  VariableParameter(ex) + exInt;			  //修正过后的陀螺仪的xyz
+//	gy = gy + Kp *  VariableParameter(ey) + eyInt;	
+//	gz = gz + Kp *  VariableParameter(ez) + ezInt;	
+//  								
+//  // integrate quaternion rate and normalise			  //四元素的微分方程	，四元数的更新
+//  q0 = q0 + (-q1*gx - q2*gy - q3*gz)*halfT;
+//  q1 = q1 + (q0*gx + q2*gz - q3*gy)*halfT;
+//  q2 = q2 + (q0*gy - q1*gz + q3*gx)*halfT;
+//  q3 = q3 + (q0*gz + q1*gy - q2*gx)*halfT;
+//
+//  // normalise quaternion	   正常化的四元数
+//  norm = Q_rsqrt(q0q0 + q1q1 + q2q2 + q3q3);
+//  q0 = q0 * norm;
+//  q1 = q1 * norm;
+//  q2 = q2 * norm;
+//  q3 = q3 * norm;
+//
+//  qa0 = q0;
+//  qa1 = q1;
+//  qa2 = q2;
+//  qa3 = q3;
+//
+//
+////	
+//  	angle.roll = asin(-2*q1q3 + 2*q0q2); // pitch
+//	angle.pitch = atan2(2*q2q3 + 2*q0q1, -2*q1q1 - 2*q2q2 + 1); // roll
+//	
+//	/*          关于地磁如何进行倾角补偿                       */    
+//	/*参考  http://baike.baidu.com/view/1239157.htm?fr=aladdin */
+//	
+//	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hy() * SIN(angle.roll) * SIN(-angle.pitch) - Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
+//	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hz() * SIN(-angle.pitch);
+//	
+//	angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA; // yaw 
+//	angle.roll *= RtA;
+//	angle.pitch *= RtA;
+//
+//}
 
 // a varient of asin() that checks the input ranges and ensures a
 // valid angle as output. If nan is given as input then zero is
@@ -275,21 +278,22 @@ void Get_Attitude_DMP()
 	dmp_pitch = dmpsafe_asin(2.0*(q[0]*q[2] - q[3]*q[1]))* 180/pi;
 		//注意：此处计算反了，非右手系。
 		
-	//dmp_yaw = -atan2(2.0*(q[0]*q[3] + q[1]*q[2]),1 - 2.0*(q[2]*q[2] + q[3]*q[3]))* 180/pi;
+	dmp_yaw = -atan2(2.0*(q[0]*q[3] + q[1]*q[2]),1 - 2.0*(q[2]*q[2] + q[3]*q[3]))* 180/pi;
   	//#ifdef YAW_CORRECT
 	//dmp_yaw = -dmp_yaw;
 	//#endif
 	
 		//注意：前面计算反了，所以这里pitch 和 roll要反过来。
-	//angle.yaw =   DMP_DATA.dmp_yaw;
-	angle.pitch =  dmp_roll;
-	angle.roll =  dmp_pitch;
+	angle.yaw = dmp_yaw;
+	angle.pitch = dmp_roll;
+	angle.roll = dmp_pitch;
 	
-	Yr = Get_HMC5883L_Hy() * COS(angle.pitch) + Get_HMC5883L_Hx() * SIN(angle.pitch) * SIN(-angle.roll) - Get_HMC5883L_Hz() * COS(-angle.roll) * SIN(angle.pitch);
-	Xr = Get_HMC5883L_Hx() * COS(-angle.roll) + Get_HMC5883L_Hz() * SIN(-angle.roll);
+	//Xr = Get_HMC5883L_Hx() * COS(angle.roll) + Get_HMC5883L_Hy() * SIN(angle.pitch) * SIN(angle.roll) + Get_HMC5883L_Hz() * COS(angle.pitch) * SIN(angle.roll);
+	//Yr = Get_HMC5883_Hy() * COS(angle.pitch) - Get_HMC5883L_Hz() * SIN(angle.pitch);
 	
 	//angle.yaw = atan2( (double)Yr, (double)Xr ) * RtA;
-	angle.yaw = atan2(Yr, Xr) * RtA;
+	//angle.yaw = atan2(Yr, Xr) * RtA;
+	//angle.yaw = atan2(Get_HMC5883L_Hy(), Get_HMC5883L_Hx()) * RtA;
 	
 	if(isnan(angle.yaw)) angle.yaw = 0;
 }

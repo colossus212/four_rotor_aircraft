@@ -84,17 +84,17 @@ float Get_DMP_qx();
 float Get_DMP_qy();
 float Get_DMP_qz();
 
-
-//typedefine
-#ifndef __TYPEDEF_
-#define __TYPEDEF_
-
-typedef struct 
-{
-	float Ax,Ay,Az,Tt,Gx,Gy,Gz;
-}	MPU6050_Struct;
-
-#endif
+//
+////typedefine
+//#ifndef __TYPEDEF_
+//#define __TYPEDEF_
+//
+//typedef struct 
+//{
+//	float Ax,Ay,Az,Tt,Gx,Gy,Gz;
+//}	MPU6050_Struct;
+//
+//#endif
 
 //extern MPU6050_Struct MPU6050_data; // MPU6050_data_old;
 
@@ -105,30 +105,29 @@ typedef struct
 
 void MPU6050_Get_Device_ID(uint8_t * Add);
 
-void MPU6050_Read_RawData();
-
-void MPU6050_RawData_Average();
-
+//void MPU6050_Read_RawData();
+//void MPU6050_RawData_Average();
 
 void MPU6050_Init(void);
-void MPU6050_Set_Accel_Range(uint8_t range);
-void MPU6050_Get_Offset();
+
+//void MPU6050_Set_Accel_Range(uint8_t range);
+//void MPU6050_Get_Offset();
 
 void F_up_try();
 
-float Get_MPU6050_Ax();
-float Get_MPU6050_Ay();
-float Get_MPU6050_Az();
+//float Get_MPU6050_Ax();
+//float Get_MPU6050_Ay();
+//float Get_MPU6050_Az();
+//
+//float Get_MPU6050_Gx();
+//float Get_MPU6050_Gy();
+//float Get_MPU6050_Gz();
 
-float Get_MPU6050_Gx();
-float Get_MPU6050_Gy();
-float Get_MPU6050_Gz();
 
-
-
-float Get_MPU6050_Gx_A();
-float Get_MPU6050_Gy_A();
-float Get_MPU6050_Gz_A();
+//
+//float Get_MPU6050_Gx_A();
+//float Get_MPU6050_Gy_A();
+//float Get_MPU6050_Gz_A();
 
 
 

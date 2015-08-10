@@ -29,27 +29,199 @@ PID_Typedef	alt_PID;
 //PID_Typedef alt_vel_PID;
 
 
+float Get_PID_Pitch_Angle_Kp()
+{
+	return pitch_angle_PID.kp;
+}
+
+float Get_PID_Pitch_Rate_Kp()
+{
+	return pitch_rate_PID.kp;
+}
+
+float Get_PID_Roll_Angle_Kp()
+{
+	return roll_angle_PID.kp;
+}
+
+float Get_PID_Roll_Rate_Kp()
+{
+	return roll_rate_PID.kp;
+}
+
+float Get_PID_Yaw_Angle_Kp()
+{
+	return yaw_angle_PID.kp;
+}
+
+float Get_PID_Yaw_Rate_Kp()
+{
+	return yaw_rate_PID.kp;
+}
+
+float Get_PID_alt_Kp()
+{
+	return alt_PID.kp;
+}
+
+
+float Get_PID_Pitch_Angle_Ki()
+{
+	return pitch_angle_PID.ki;
+}
+
+float Get_PID_Pitch_Rate_Ki()
+{
+	return pitch_rate_PID.ki;
+}
+
+float Get_PID_Roll_Angle_Ki()
+{
+	return roll_angle_PID.ki;
+}
+
+float Get_PID_Roll_Rate_Ki()
+{
+	return roll_rate_PID.ki;
+}
+
+float Get_PID_Yaw_Angle_Ki()
+{
+	return yaw_angle_PID.ki;
+}
+
+float Get_PID_Yaw_Rate_Ki()
+{
+	return yaw_rate_PID.ki;
+}
+
+float Get_PID_alt_Ki()
+{
+	return alt_PID.ki;
+}
+
+float Get_PID_Pitch_Angle_Kd()
+{
+	return pitch_angle_PID.kd;
+}
+
+float Get_PID_Pitch_Rate_Kd()
+{
+	return pitch_rate_PID.kd;
+}
+
+float Get_PID_Roll_Angle_Kd()
+{
+	return roll_angle_PID.kd;
+}
+
+float Get_PID_Roll_Rate_Kd()
+{
+	return roll_rate_PID.kd;
+}
+
+float Get_PID_Yaw_Angle_Kd()
+{
+	return yaw_angle_PID.kd;
+}
+
+float Get_PID_Yaw_Rate_Kd()
+{
+	return yaw_rate_PID.kd;
+}
+
+float Get_PID_alt_Kd()
+{
+	return alt_PID.kd;
+}
+
+void PID_Parameter_Load_Rate(float roll_kp, float roll_ki, float roll_kd,
+				float pitch_kp, float pitch_ki, float pitch_kd,
+				float yaw_kp, float yaw_ki, float yaw_kd)
+{
+	pitch_rate_PID.kp = pitch_kp;   // 15.0 modualated
+	pitch_rate_PID.ki = pitch_ki;	// 0.4 modualated
+	pitch_rate_PID.kd = pitch_kd;  // 28.0 modualated 
+	
+	roll_rate_PID.kp = roll_kp; // 15.0 modualated
+	roll_rate_PID.ki = roll_ki; // 0.4 modualated
+	roll_rate_PID.kd = roll_kd; // 28.0 modualated
+	
+	yaw_rate_PID.kp = yaw_kp; // 1.8 modualated
+	yaw_rate_PID.ki = yaw_ki;
+	yaw_rate_PID.kd = yaw_kd; //0.05 modualated
+}
+
+void PID_Parameter_Load_Angle(float roll_kp, float roll_ki, float roll_kd,
+				float pitch_kp, float pitch_ki, float pitch_kd,
+				float yaw_kp, float yaw_ki, float yaw_kd)
+{
+	pitch_angle_PID.kp = pitch_kp;   
+	pitch_angle_PID.ki = pitch_ki;	
+	pitch_angle_PID.kd = pitch_kd;  // 28.0 modualated 
+	
+	roll_angle_PID.kp = roll_kp; // 15.0 modualated
+	roll_angle_PID.ki = roll_ki; // 0.4 modualated
+	roll_angle_PID.kd = roll_kd; // 28.0 modualated
+	
+	yaw_angle_PID.kp = yaw_kp; // 1.8 modualated
+	yaw_angle_PID.ki = yaw_ki;
+	yaw_angle_PID.kd = yaw_kd; //0.05 modualated
+}
+
+void PID_Parameter_Load_Height(float roll_kp, float roll_ki, float roll_kd,
+				float pitch_kp, float pitch_ki, float pitch_kd,
+				float yaw_kp, float yaw_ki, float yaw_kd)
+{	
+	alt_PID.kp = roll_kp; 
+	alt_PID.ki = roll_ki; 
+	alt_PID.kd = roll_kd; 
+	
+	yaw_angle_PID.kp = pitch_kp;   
+	yaw_angle_PID.ki = pitch_ki;	
+	yaw_angle_PID.kd = pitch_kd; 
+	
+	yaw_rate_PID.kp = yaw_kp;
+	yaw_rate_PID.ki = yaw_ki;
+	yaw_rate_PID.kd = yaw_kd; 
+}
+
+void PID_Parameter_Reset_Rate()
+{	
+	pitch_rate_PID.integ = 0;
+	roll_rate_PID.integ = 0;
+	yaw_rate_PID.integ = 0;
+}
+void PID_Parameter_Reset_Angle()
+{	
+	pitch_angle_PID.integ = 0;
+	roll_angle_PID.integ = 0;
+	yaw_angle_PID.integ = 0;
+	alt_PID.integ = 0;
+}
+
 
 void PID_Parameter_Init()
 {
 	// The data of pitch
-	pitch_angle_PID.kp = 0;    //5.0
-	pitch_angle_PID.ki = 0;  // 0.01
-	pitch_angle_PID.kd = 0;    //1.7
+	pitch_angle_PID.kp = 1.5;    // 1.5 or 1.0 modualated
+	pitch_angle_PID.ki = 0.06;  // 0 or 0.04 modualated
+	pitch_angle_PID.kd = 15.0;    // 0 or 10.0 modualated
 	
-	pitch_rate_PID.kp = 0;   // 0.21 modualated
-	pitch_rate_PID.ki = 0;	//
-	pitch_rate_PID.kd = 0;  //0.05 modualated ??
+	pitch_rate_PID.kp = 13.0;   // 15.0 modualated
+	pitch_rate_PID.ki = 0.4;	// 0.4 modualated
+	pitch_rate_PID.kd = 30.0;  // 28.0 modualated 
 	
 
 	//The data of roll
-	roll_angle_PID.kp = 0;  // 0.35 modualated
-	roll_angle_PID.ki = 0; // 0.012 modualated
-	roll_angle_PID.kd = 0; // 0.15 modualated
+	roll_angle_PID.kp = 1.5;  // 1.0 modualated
+	roll_angle_PID.ki = 0.06; // 0.09 modualated
+	roll_angle_PID.kd = 25.0; // 20.0 modualated
 
-	roll_rate_PID.kp = 0; // 0.22 modualated
-	roll_rate_PID.ki = 0;
-	roll_rate_PID.kd = 0; // 0.01 modualated
+	roll_rate_PID.kp = 13; // 15.0 modualated
+	roll_rate_PID.ki = 0.4; // 0.4 modualated
+	roll_rate_PID.kd = 40; // 28.0 modualated
+
 	
 	//The data of yaw
 	yaw_angle_PID.kp = 0;   // 5.0

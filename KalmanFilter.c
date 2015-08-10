@@ -19,14 +19,17 @@
 #define KALMAN_Q 0.02
 #define KALMAN_R 2.0000	//6.0000
 
-KalmanFilter_Typedef Kalman_Ax, Kalman_Ay, Kalman_Az, Kalman_Gx, Kalman_Gy, Kalman_Gz;
-
+//KalmanFilter_Typedef Kalman_Ax, Kalman_Ay, Kalman_Az;
+KalmanFilter_Typedef Kalman_Gx, Kalman_Gy, Kalman_Gz;
+KalmanFilter_Typedef Kalman_Hx, Kalman_Hy, Kalman_Hz;
 void KalmanFilterParameter_Init()
 {
-	Kalman_Ax.Q = Kalman_Ay.Q = Kalman_Az.Q = KALMAN_Q;
-	Kalman_Ax.R = Kalman_Ay.R = Kalman_Az.R = KALMAN_R;
+	//Kalman_Ax.Q = Kalman_Ay.Q = Kalman_Az.Q = KALMAN_Q;
+	//Kalman_Ax.R = Kalman_Ay.R = Kalman_Az.R = KALMAN_R;
 	Kalman_Gx.Q = Kalman_Gy.Q = Kalman_Gz.Q = KALMAN_Q;
 	Kalman_Gx.R = Kalman_Gy.R = Kalman_Gz.R = KALMAN_R;
+	Kalman_Hx.Q = Kalman_Hy.Q = Kalman_Hz.Q = KALMAN_Q;
+	Kalman_Hx.R = Kalman_Hy.R = Kalman_Hz.R = KALMAN_R;
 }
 
 

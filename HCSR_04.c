@@ -11,10 +11,6 @@
 		  
 		  // Trig connect to P5.3 (Pin 36)
 		  // Echo connect to TI06 (P0.6 as Pin 30)
-		  
-		  // to do at "Get_Height()"		 
-		  // the HCSR_Height and angle is not sampling at the same time
-			
 ************************************************/
 
 
@@ -25,6 +21,7 @@
 
 float TIME=0;
 float HCSR_Height = 0;
+float Height_Calibration_Factor;
 uint32_t width = 0;
 
 void HCSR04_Init()
@@ -36,9 +33,7 @@ void HCSR04_Init()
 float Get_Height()
 {
 	float Height;  
-	Height = HCSR_Height / sqrt(tan(Get_Pitch() * AtR) * tan(Get_Pitch() * AtR) + tan(Get_Roll() * AtR) * tan(Get_Roll() * AtR) + 1);		
-	// the HCSR_Height and angle is not sampling at the same time
-	// to do
+	Height = HCSR_Height / Height_Calibration_Factor;
 	return Height;
 }
 
@@ -49,13 +44,15 @@ void Flash_Height_Prepare()
 	Trig = 1;
 	delay_us(20);
 	Trig = 0;
+	//Height_Calibration_Factor = sqrt(tan(Get_Pitch() * AtR) * tan(Get_Pitch() * AtR) + tan(Get_Roll() * AtR) * tan(Get_Roll() * AtR) + 1);
+	Height_Calibration_Factor = 1 / cos(Get_Pitch() * AtR) * cos(Get_Roll() * AtR);
 }
 void Flash_Height()
 {	
 	R_TAU0_Channel6_Get_PulseWidth(& width);	
 	R_TAU0_Channel6_Stop();
 	
-	TIME = width / 1.5;	
+	TIME = width / 2;//1.5;	
 	if(TIME >100 && TIME <20000)	
 	HCSR_Height = TIME / 58.8;	
 }

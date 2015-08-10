@@ -12,7 +12,7 @@ void ADNS3080_Frame_Capture();
 void ADNS3080_Frame_Data_Correct();
 uint8_t Get_Frame_Data(uint8_t count);
 uint8_t Get_Frame_Data_Matrix(uint8_t i, uint8_t j);
-
+uint8_t * Get_Frame_Data_Pointer(uint8_t i, uint8_t j);
 
 #define	ADNS3080_RA_Product_ID	0x00
 #define	ADNS3080_RA_Revision_ID	0x01
