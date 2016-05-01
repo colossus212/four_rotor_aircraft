@@ -11,7 +11,8 @@ uint8_t Get_Fly_Flag();
 
 void Control_Posture(float roll, float pitch, float yaw);
 void Control_Heigh(float H);
-void Control_Track();
+void Control_Track_Frame();
+void Control_Track_Motion();
 
 void Control_Test();
 void Control_Fly();

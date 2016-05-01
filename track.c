@@ -6,7 +6,7 @@
 * Description	: tracking
 * API		: 
 		  void Track_Init();
-		  float Track();  // return the Target of Yaw
+		  float Track_Frame();  // return the Target of Yaw
 *************************************************************************/
 
 
@@ -14,6 +14,7 @@
 #include "ADNS_3080.h"
 #include <math.h>
 #include "IMU.h"
+#include "HCSR_04.h"
 //#include <stdbool.h>
 
 const static float pi = 3.1415926;
@@ -404,10 +405,10 @@ void Track_Init()
 
 
 /******************************************************************************
-* function :		float Track()
+* function :		float Track_Frame()
 * Description : 
 *******************************************************************************/
-float Track()
+float Track_Frame()
 {
 	int8_t count_x, count_y;
 	uint8_t Current_x, Current_y;
@@ -430,6 +431,8 @@ float Track()
 		// the position on the Frame is related to Pitch and Roll
 	count_x = tan(Get_Roll()) * 8 * 1600 / 25.4;
 	count_y = tan(Get_Pitch()) * 8 * 1600 / 25.4;
+	count_x = 15 - count_x;
+	count_y = 15 - count_y;
 		// Get Destination
 		// the Destination is related to Frame_Gradient_Matrix
 	
@@ -437,6 +440,41 @@ float Track()
 	Target_yaw = atan2(Destination_y - Current_y, Destination_x - Destination_x);
 	
 	// to do
-	return Target_yaw;
-		
+	return Target_yaw;	
+}
+
+/******************************************************************************
+* function :		float Track_Motion()
+* Description : 
+*******************************************************************************/
+int16_t SumX, SumY;
+extern uint8_t Delta_X, Delta_Y;
+float Track_Motion()
+{
+	float sum_x, sum_y;
+	if(Delta_X & 0x80) // if nagetive
+	{
+		Delta_X -= 1;
+		Delta_X = ~ Delta_X;
+		Delta_X = (-1) * Delta_X;
+		Delta_X -= 256;
+	}
+	
+	if(Delta_Y & 0x80) // if nagetive
+	{
+		Delta_Y -= 1;
+		Delta_Y = ~ Delta_Y;
+		Delta_Y = (-1) * Delta_Y;
+		Delta_Y -= 256;
+	}
+	
+	SumX = SumX + Delta_X;
+	SumY = SumY + Delta_Y;
+		// Distance = Delta_X * (25.4 / 1600) * n
+		// n = Image_length : Object_length = 8 mm : Object_length
+	sum_x = (25.4 * (float)SumX * Get_Height()) / (12 * 1600); 
+	sum_y = (25.4 * (float)SumY * Get_Height()) / (12 * 1600);
+	
+	return sum_x;
+	//return sum_y;
 }

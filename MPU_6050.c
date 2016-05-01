@@ -8,9 +8,9 @@
 * API		:
 		  #define MPU6050_Int P4.3
 
-		  void MPU6050_Init(void);	³õÊ¼»¯ MPU6050 µÄ¼Ä´æÆ÷,¼ÆËãÁãÆ«
-		  uint8_t MPU6050_DMP_Initialize(void); //DMP³õÊ¼»¯
-		  void DMP_Routing(void);	 //DMP Ïß³Ì£¬Ö÷ÒªÓÃÓÚ¶ÁÈ¡ºÍ´¦ÀíDMPµÄ½á¹û   [ĞèÒª¶¨Ê±µ÷ÓÃ]
+		  void MPU6050_Init(void);	//åˆå§‹åŒ–
+		  uint8_t MPU6050_DMP_Initialize(void); //DMPåˆå§‹åŒ–
+		  void DMP_Routing(void);	 //DMP ï¿½ß³Ì£ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ú¶ï¿½È¡ï¿½Í´ï¿½ï¿½ï¿½DMPï¿½Ä½ï¿½ï¿½   [ï¿½ï¿½Òªï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½]
 		  
 		  float Get_DMP_Gyro_x();
 		  float Get_DMP_Gyro_y();
@@ -23,7 +23,7 @@
 		  float Get_DMP_qy();
 		  float Get_DMP_qz();
 
-		  void MPU6050_Read_RawData();  »ñµÃ MPU6050 µÄÁù¸ö²âÁ¿Öµ£¬ÒÑ¾­×ª»»µ¥Î»²¢¼õÈ¥ÁãÆ« Êä³ö½Ç¶ÈÖµ
+		  void MPU6050_Read_RawData();
 		  extern MPU6050_Struct MPU6050_data ;
 		  float Get_MPU6050_Ax();
 		  float Get_MPU6050_Ay();
@@ -184,13 +184,13 @@ float Get_MPU6050_Gz_old()
 //}
 
 
-///**************************ÊµÏÖº¯Êı********************************************
-//*º¯ÊıÔ­ĞÍ:		void MPU6050_Set_Accel_Range(uint8_t range)
-//*¹¦¡¡¡¡ÄÜ:	    ÉèÖÃ  MPU6050 ¼ÓËÙ¶È¼ÆµÄ×î´óÁ¿³Ì 
-//* AFS_SEL=0    ¡À2	g	16,384    LSB/g       
-//* AFS_SEL=1    ¡À4	g	8,192     LSB/g 
-//* AFS_SEL=2    ¡À8	g	4,096     LSB/g
-//* AFS_SEL=3    ¡À16	g	2,048     LSB/g 
+///**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+//*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Set_Accel_Range(uint8_t range)
+//*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ï¿½  MPU6050 ï¿½ï¿½ï¿½Ù¶È¼Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
+//* AFS_SEL=0    ï¿½ï¿½2	g	16,384    LSB/g       
+//* AFS_SEL=1    ï¿½ï¿½4	g	8,192     LSB/g 
+//* AFS_SEL=2    ï¿½ï¿½8	g	4,096     LSB/g
+//* AFS_SEL=3    ï¿½ï¿½16	g	2,048     LSB/g 
 //*******************************************************************************/
 //void MPU6050_Set_Accel_Range(uint8_t range)
 //{
@@ -205,13 +205,13 @@ float Get_MPU6050_Gz_old()
 //}
 //
 //
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Set_Gyro_Range(uint8_t range)
-*¹¦¡¡¡¡ÄÜ:	    ÉèÖÃ  MPU6050 ÍÓÂİÒÇµÄ×î´óÁ¿³Ì
-* FS_SEL=0    ¡À250    o/s	131     LSB/(o/s) 
-* FS_SEL=1    ¡À500    o/s	65.5    LSB/(o/s) 
-* FS_SEL=2    ¡À1000   o/s	32.8    LSB/(o/s)
-* FS_SEL=3    ¡À2000   o/s	16.4    LSB/(o/s) 
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Set_Gyro_Range(uint8_t range)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ï¿½  MPU6050 ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+* FS_SEL=0    ï¿½ï¿½250    o/s	131     LSB/(o/s) 
+* FS_SEL=1    ï¿½ï¿½500    o/s	65.5    LSB/(o/s) 
+* FS_SEL=2    ï¿½ï¿½1000   o/s	32.8    LSB/(o/s)
+* FS_SEL=3    ï¿½ï¿½2000   o/s	16.4    LSB/(o/s) 
 *******************************************************************************/
 void MPU6050_Set_Gyro_Range(uint8_t range)
 {
@@ -227,9 +227,9 @@ void MPU6050_Set_Gyro_Range(uint8_t range)
 
 
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Init(void)
-*¹¦¡¡¡¡ÄÜ:	    ³õÊ¼»¯ MPU6050 ÒÔ½øÈë¿ÉÓÃ×´Ì¬¡£
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Init(void)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½Ê¼ï¿½ï¿½ MPU6050 ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½
 *******************************************************************************/
 void MPU6050_Init(void)
 {
@@ -241,19 +241,19 @@ void MPU6050_Init(void)
 	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_PWR_MGMT_1, 0x00);	//awake
 	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_SMPLRT_DIV, 0x07);
 	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_CONFIG, 0x06);
-//	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_GYRO_CONFIG, 0x18); //FS_SEL=0    ¡À250    o/s	131     LSB/(o/s) 
+//	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_GYRO_CONFIG, 0x18); //FS_SEL=0    ï¿½ï¿½250    o/s	131     LSB/(o/s) 
 //	GyroRatio = 131.0;
 //	
-//	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_ACCEL_CONFIG, 0x00); //AFS_SEL=0    ¡À2	g	16,384    LSB/g 
+//	IIC_Write_Byte(MPU6050_Address, MPU6050_RA_ACCEL_CONFIG, 0x00); //AFS_SEL=0    ï¿½ï¿½2	g	16,384    LSB/g 
 //	AcceRatio = 16384.0;
 	
 	//delay_ms(100);
 	//MPU6050_Get_Offset();
 }
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Get_Device_ID(uint8_t * Add)
-*¹¦¡¡¡¡ÄÜ:	    ¶ÁÈ¡  MPU6050 WHO_AM_I ±êÊ¶	 ½«µÃµ½ 0x68
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Get_Device_ID(uint8_t * Add)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½È¡  MPU6050 WHO_AM_I ï¿½ï¿½Ê¶	 ï¿½ï¿½ï¿½Ãµï¿½ 0x68
 *******************************************************************************/
 void MPU6050_Get_Device_ID(uint8_t * Add) 
 {
@@ -261,8 +261,8 @@ void MPU6050_Get_Device_ID(uint8_t * Add)
 }
 
 
-//¶ÁÈ¡3¸öÖáµÄÊı¾İ 
-//x,y,z¶ÁÈ¡µ½µÄÊı¾İ 
+//ï¿½ï¿½È¡3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
+//x,y,zï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
 
 //void MPU6050_Read_RawData()
 //{
@@ -294,8 +294,8 @@ void MPU6050_Get_Device_ID(uint8_t * Add)
 //}
 
 
-//¶ÁÈ¡ADXLµÄÆ½¾ùÖµ 
-//x,y,z¶ÁÈ¡8´ÎºóÈ¡Æ½¾ùÖµ 
+//ï¿½ï¿½È¡ADXLï¿½ï¿½Æ½ï¿½ï¿½Öµ 
+//x,y,zï¿½ï¿½È¡8ï¿½Îºï¿½È¡Æ½ï¿½ï¿½Öµ 
 //
 //void MPU6050_RawData_Average()
 //{
@@ -324,11 +324,11 @@ MPU6050_Int_Init()
 
 
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		unsigned char MPU6050_is_DRY(void)
-*¹¦¡¡¡¡ÄÜ:	    ¼ì²é MPU6050µÄÖĞ¶ÏÒı½Å£¬²âÊÔÊÇ·ñÍê³É×ª»»
-·µ»Ø 1  ×ª»»Íê³É
-0 Êı¾İ¼Ä´æÆ÷»¹Ã»ÓĞ¸üĞÂ
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		unsigned char MPU6050_is_DRY(void)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ MPU6050ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+ï¿½ï¿½ï¿½ï¿½ 1  ×ªï¿½ï¿½ï¿½ï¿½ï¿½
+0 ï¿½ï¿½ï¿½İ¼Ä´ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ğ¸ï¿½ï¿½ï¿½
 *******************************************************************************/
 unsigned char MPU6050_is_DRY(void)
 {	
@@ -339,9 +339,9 @@ unsigned char MPU6050_is_DRY(void)
 	else return 0;
 }
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Set_Clock_Source(uint8_tsource)
-*¹¦¡¡¡¡ÄÜ:	    ÉèÖÃ  MPU6050 µÄÊ±ÖÓÔ´
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Set_Clock_Source(uint8_tsource)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ï¿½  MPU6050 ï¿½ï¿½Ê±ï¿½ï¿½Ô´
  * CLK_SEL | Clock Source
  * --------+--------------------------------------
  * 0       | Internal oscillator
@@ -370,11 +370,11 @@ void MPU6050_Reset(void)
 
 
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Set_Sleep_Enabled(uint8_tenabled)
-*¹¦¡¡¡¡ÄÜ:	    ÉèÖÃ  MPU6050 ÊÇ·ñ½øÈëË¯ÃßÄ£Ê½
-				enabled =1   Ë¯¾õ
-			    enabled =0   ¹¤×÷
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Set_Sleep_Enabled(uint8_tenabled)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ï¿½  MPU6050 ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ë¯ï¿½ï¿½Ä£Ê½
+				enabled =1   Ë¯ï¿½ï¿½
+			    enabled =0   ï¿½ï¿½ï¿½ï¿½
 *******************************************************************************/
 void MPU6050_Set_Sleep_Enabled(uint8_t enabled) 
 {
@@ -382,9 +382,9 @@ void MPU6050_Set_Sleep_Enabled(uint8_t enabled)
 }
 
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		uint8_t MPU6050_Test_Connection(void)
-*¹¦¡¡¡¡ÄÜ:	    ¼ì²âMPU6050 ÊÇ·ñÒÑ¾­Á¬½Ó
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		uint8_t MPU6050_Test_Connection(void)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½MPU6050 ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
 *******************************************************************************/
 uint8_t MPU6050_Test_Connection(void) 
 {
@@ -395,35 +395,35 @@ uint8_t MPU6050_Test_Connection(void)
    else return 0;
 }
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Set_I2C_Master_Mode_Enabled(uint8_tenabled)
-*¹¦¡¡¡¡ÄÜ:	    ÉèÖÃ MPU6050 ÊÇ·ñÎªAUX I2CÏßµÄÖ÷»ú
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Set_I2C_Master_Mode_Enabled(uint8_tenabled)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ï¿½ MPU6050 ï¿½Ç·ï¿½ÎªAUX I2Cï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½
 *******************************************************************************/
 void MPU6050_Set_I2C_Master_Mode_Enabled(uint8_t enabled) 
 {
     IIC_Write_Bit(MPU6050_Address, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_MST_EN_BIT, enabled);
 }
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Set_I2C_Bypass_Enabled(uint8_tenabled)
-*¹¦¡¡¡¡ÄÜ:	    ÉèÖÃ MPU6050 ÊÇ·ñÎªAUX I2CÏßµÄÖ÷»ú
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Set_I2C_Bypass_Enabled(uint8_tenabled)
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	    ï¿½ï¿½ï¿½ï¿½ MPU6050 ï¿½Ç·ï¿½ÎªAUX I2Cï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½
 *******************************************************************************/
 void MPU6050_Set_I2C_Bypass_Enabled(uint8_t enabled) 
 {
     IIC_Write_Bit(MPU6050_Address, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_I2C_BYPASS_EN_BIT, enabled);
 }
 
-/**************************ÊµÏÖº¯Êı********************************************
-*º¯ÊıÔ­ĞÍ:		void MPU6050_Check()
-*¹¦¡¡¡¡ÄÜ:	  ¼ì²âIIC×ÜÏßÉÏµÄMPU6050ÊÇ·ñ´æÔÚ
+/**************************Êµï¿½Öºï¿½ï¿½ï¿½********************************************
+*ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½:		void MPU6050_Check()
+*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:	  ï¿½ï¿½ï¿½IICï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½MPU6050ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
 *******************************************************************************/
 void MPU6050_Check(void) 
 { 
   switch(MPU6050_Test_Connection())
   {
-    case 0: //printf("Î´¼ì²âµ½MPU6050...\r\n");
+    case 0: //printf("Î´ï¿½ï¿½âµ½MPU6050...\r\n");
       break;
-    case 1: //printf("ÒÑ¼ì²âµ½MPU6050...\r\n");
+    case 1: //printf("ï¿½Ñ¼ï¿½âµ½MPU6050...\r\n");
       break;
   }
 } 
@@ -1109,10 +1109,10 @@ const unsigned char dmpUpdates[MPU6050_DMP_UPDATES_SIZE] =
 
 
 
-uint16_t dmpPacketSize;	 //FIFOÊı¾İ	°ü×Ö½ÚÊı
-struct DMP_FIFO_map DMP_DATA; //FIFOµÄÊı¾İ½âÎö£¬²Î¿¼Í·ÎÄ¼şµÄ½á¹¹Ìå¶¨Òå
+uint16_t dmpPacketSize;	 //FIFOï¿½ï¿½ï¿½ï¿½	ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½
+struct DMP_FIFO_map DMP_DATA; //FIFOï¿½ï¿½ï¿½ï¿½ï¿½İ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¿ï¿½Í·ï¿½Ä¼ï¿½ï¿½Ä½á¹¹ï¿½å¶¨ï¿½ï¿½
 
-//È¡Á½¸öÊıÖĞ×îĞ¡µÄÄÇ¸ö
+//È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½Ç¸ï¿½
 uint8_t min(uint8_t x ,uint8_t y)
 {
 	if( x < y)return x;
@@ -1120,7 +1120,7 @@ uint8_t min(uint8_t x ,uint8_t y)
 }
 
 
-//³õÊ¼»¯DMPÒıÇæ
+//ï¿½ï¿½Ê¼ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½
 uint8_t MPU6050_DMP_Initialize(void)
 {
 	uint8_t dmpUpdate[16], j;
@@ -1130,29 +1130,29 @@ uint8_t MPU6050_DMP_Initialize(void)
 	int8_t xgOffset	, ygOffset , zgOffset;
 	
     	// reset device
-    	//======ÅäÖÃDMPÒıÇæ=========
-    	//¸´Î»MPU6050.
+    	//======ï¿½ï¿½ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½=========
+    	//ï¿½ï¿½Î»MPU6050.
     MPU6050_Reset();
     delay_ms(50); // wait after reset 50ms
-  	  //½ûÖ¹ĞİÃßÄ£Ê½.
+  	  //ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½Ä£Ê½.
     MPU6050_Set_Sleep_Enabled(0);
- 	   //¶ÁÈ¡MPU6050Ó²¼ş°æ±¾.
- 	   //ÕıÔÚÑ¡ÔñÓÃ»§ÄÚ´æ¿é.
+ 	   //ï¿½ï¿½È¡MPU6050Ó²ï¿½ï¿½ï¿½æ±¾.
+ 	   //ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ú´ï¿½ï¿½.
     MPU6050_Set_Memory_Bank(0x10, 1, 1);
- 	   //printf(("ÕıÔÚÑ¡ÔñÓÃ»§ÄÚ´æ×Ö½Ú...\r\n"));
+ 	   //printf(("ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ú´ï¿½ï¿½Ö½ï¿½...\r\n"));
     MPU6050_Set_Memory_Start_Address(0x06);
-	    //printf(("ÕıÔÚ¼ì²éÓ²¼ş°æ±¾...\r\n"));
+	    //printf(("ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½Ó²ï¿½ï¿½ï¿½æ±¾...\r\n"));
     MPU6050_Read_Memory_Byte();
    	 ////printf(("Revision @ user[16][6] = \r\n"));
-   	 //printf(("¸´Î»ÄÚ´æ¿é...\r\n"));
+   	 //printf(("ï¿½ï¿½Î»ï¿½Ú´ï¿½ï¿½...\r\n"));
     MPU6050_Set_Memory_Bank(0, 0, 0);
  	   // check OTP bank valid
- 	   //printf(("¶ÁÈ¡OTP¿éÓĞĞ§±êÖ¾...\r\n"));
+ 	   //printf(("ï¿½ï¿½È¡OTPï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½Ö¾...\r\n"));
     MPU6050_Get_OTP_Bank_Valid();
 	//     //printf("OTP bank is ");
 	//     //printf(otpValid ? ("valid!") : ("invalid!"));
     	// get X/Y/Z gyro offsets
-    	//printf(("¶ÁÈ¡¼ÓËÙ¶ÈÆ«ÒÆÖµ...\r\n"));
+    	//printf(("ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ù¶ï¿½Æ«ï¿½ï¿½Öµ...\r\n"));
     xgOffset = MPU6050_Get_XGyro_Offset_TC();
     ygOffset = MPU6050_Get_YGyro_Offset_TC();
     zgOffset = MPU6050_Get_ZGyro_Offset_TC(); 
@@ -1160,130 +1160,130 @@ uint8_t MPU6050_DMP_Initialize(void)
   	
 
 	// setup weird slave stuff (?)
-    	//printf(("ÉèÖÃ´ÓÆ÷¼şµØÖ·Îª0x7F...\r\n"));
+    	//printf(("ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·Îª0x7F...\r\n"));
     MPU6050_Set_Slave_Address(0, 0x7F);
-   	 //printf(("½ûÖ¹IICÖ÷Æ÷¼şÄ£Ê½...\r\n"));
+   	 //printf(("ï¿½ï¿½Ö¹IICï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½...\r\n"));
     MPU6050_Set_I2C_Master_Mode_Enabled(0);
-  	  //Ö÷¿ØÖÆÆ÷µÄI2CÓë	MPU6050µÄAUXI2C	Ö±Í¨¡£¿ØÖÆÆ÷¿ÉÒÔÖ±½Ó·ÃÎÊHMC5883L
+  	  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½I2Cï¿½ï¿½	MPU6050ï¿½ï¿½AUXI2C	Ö±Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½HMC5883L
     MPU6050_Set_I2C_Bypass_Enabled(1);	     
-   	 //printf(("ÉèÖÃ´ÓÆ÷¼şµØÖ·Îª0x68...\r\n"));
+   	 //printf(("ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·Îª0x68...\r\n"));
     MPU6050_Set_Slave_Address(0, 0x68);
-   	 //printf(("¸´Î»IICÖ÷Æ÷¼ş¿ØÖÆÈ¨...\r\n"));
+   	 //printf(("ï¿½ï¿½Î»IICï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨...\r\n"));
     MPU6050_Reset_I2C_Master();
     delay_ms(20);
 
    	 // load DMP code into memory banks
-   	 //printf(("ÕıÔÚĞ´ÈëDMP´úÂë¶Îµ½MPU6050 \r\n"));
+   	 //printf(("ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½Îµï¿½MPU6050 \r\n"));
     if (MPU6050_Write_Prog_Memory_Block(dmpMemory, MPU6050_DMP_CODE_SIZE, 0, 0, 1)) 
     {
-    	    //printf(("DMP´úÂëĞ´ÈëĞ£Ñé³É¹¦...\r\n"));
-    	    //printf(("ÅäÖÃDMPºÍÓĞ¹ØÉèÖÃ...\r\n"));
+    	    //printf(("DMPï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½Ğ£ï¿½ï¿½É¹ï¿½...\r\n"));
+    	    //printf(("ï¿½ï¿½ï¿½ï¿½DMPï¿½ï¿½ï¿½Ğ¹ï¿½ï¿½ï¿½ï¿½ï¿½...\r\n"));
    	     // write DMP configuration
-   	      //printf(("ÕıÔÚĞ´ÈëDMPÅäÖÃ´úÂëµ½MPU6050ÄÚ´æ...\r\n"));
+   	      //printf(("ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½DMPï¿½ï¿½ï¿½Ã´ï¿½ï¿½ëµ½MPU6050ï¿½Ú´ï¿½...\r\n"));
         if (MPU6050_Write_Prog_DMP_Configuration_Set(dmpConfig, MPU6050_DMP_CONFIG_SIZE)) 
 	{
-      	      //printf(("DMPÅäÖÃ´úÂëĞ´ÈëĞ£Ñé³É¹¦\r\n"));
-     	       //printf(("ÉèÖÃZÖá½ÇËÙ¶ÈÊ±ÖÓÔ´...\r\n"));
+      	      //printf(("DMPï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½Ğ£ï¿½ï¿½É¹ï¿½\r\n"));
+     	       //printf(("ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Ê±ï¿½ï¿½Ô´...\r\n"));
             MPU6050_Set_Clock_Source(MPU6050_CLOCK_PLL_ZGYRO);
-    	        //printf(("Ê¹ÄÜDMPÒıÇæºÍFIFOÖĞ¶Ï...\r\n"));
+    	        //printf(("Ê¹ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½ï¿½FIFOï¿½Ğ¶ï¿½...\r\n"));
             MPU6050_Set_Int_Enabled(0x12);
-          	//printf(("ÉèÖÃDMP²ÉÑùÂÊÎª200Hz...\r\n"));
+          	//printf(("ï¿½ï¿½ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª200Hz...\r\n"));
             MPU6050_Set_Rate(4); // 1khz / (1 + 4) = 200 Hz
-        	//printf(("ÉèÖÃÍâ²¿Í¬²½Ö¡µ½TEMP_OUT_L[0]...\r\n"));
+        	//printf(("ï¿½ï¿½ï¿½ï¿½ï¿½â²¿Í¬ï¿½ï¿½Ö¡ï¿½ï¿½TEMP_OUT_L[0]...\r\n"));
             MPU6050_Set_External_Frame_Sync(MPU6050_EXT_SYNC_TEMP_OUT_L);
-       	     	//printf(("ÉèÖÃDLPF´ø¿íÎª42Hz...\r\n"));
+       	     	//printf(("ï¿½ï¿½ï¿½ï¿½DLPFï¿½ï¿½ï¿½ï¿½Îª42Hz...\r\n"));
             MPU6050_Set_DLPF_Mode(MPU6050_DLPF_BW_42);
-            	//printf(("ÉèÖÃ½ÇËÙ¶È¾«¶ÈÎª +/- 2000 deg/sec...\r\n"));
+            	//printf(("ï¿½ï¿½ï¿½Ã½ï¿½ï¿½Ù¶È¾ï¿½ï¿½ï¿½Îª +/- 2000 deg/sec...\r\n"));
             MPU6050_Set_Gyro_Range(MPU6050_GYRO_FS_2000);
-            	//printf(("ÉèÖÃDMPÅäÖÃ×Ö½Ú...\r\n"));
+            	//printf(("ï¿½ï¿½ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½...\r\n"));
             MPU6050_Set_DMP_Config1(0x03);
             MPU6050_Set_DMP_Config2(0x00);
-           	//printf(("Çå³şOTP¿é±êÖ¾...\r\n"));
+           	//printf(("ï¿½ï¿½ï¿½OTPï¿½ï¿½ï¿½Ö¾...\r\n"));
             MPU6050_Set_OTP_Bank_Valid(0);
-            	//printf(("ÉèÖÃX/Y/ZÖá½ÇËÙ¶ÈÎªÏÈÇ°Öµ...\r\n"));
+            	//printf(("ï¿½ï¿½ï¿½ï¿½X/Y/Zï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Îªï¿½ï¿½Ç°Öµ...\r\n"));
             MPU6050_Set_XGyro_Offset_TC(xgOffset);
             MPU6050_Set_YGyro_Offset_TC(ygOffset);
             MPU6050_Set_ZGyro_Offset_TC(zgOffset);
 						
 				//		DMPCalibrate();		//tobe tested
 						
-            //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 1/7 ...\r\n"));
+            //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 1/7 ...\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Write_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1], 1, 0);
-            //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 2/7 ...\r\n"));
+            //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 2/7 ...\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Write_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1], 0, 0);
-            //printf(("ÕıÔÚ¸´Î»FIFO...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½Ú¸ï¿½Î»FIFO...\r\n"));
             MPU6050_Reset_FIFO();
-            //printf(("ÕıÔÚ¶ÁÈ¡FIFO¼ÆÊı...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½Ú¶ï¿½È¡FIFOï¿½ï¿½ï¿½ï¿½...\r\n"));
             fifoCount = MPU6050_Get_FIFO_Count();
             MPU6050_Get_FIFO_Bytes(fifoBuffer, fifoCount);
-            //printf(("ÕıÔÚÉèÖÃÔË¶¯ãĞÖµÎª2...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½ÖµÎª2...\r\n"));
             MPU6050_Set_Motion_Detection_Threshold(2);
-            //printf(("ÕıÔÚÉèÖÃ0ÔË¶¯¼ì²âãĞÖµÎª156...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÖµÎª156...\r\n"));
             MPU6050_Set_Zero_Motion_Detection_Threshold(156);
-            //printf(("ÕıÔÚÉèÖÃÔË¶¯¼ì²â³ÖĞøÊ±¼äÎª80...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Îª80...\r\n"));
             MPU6050_Set_Motion_Detection_Duration(80);
-            //printf(("ÕıÔÚÉèÖÃ0ÔË¶¯¼ì²â³ÖĞøÊ±¼äÎª0...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Îª0...\r\n"));
             MPU6050_Set_Zero_Motion_Detection_Duration(0);
-            //printf(("¸´Î»FIFO...\r\n"));
+            //printf(("ï¿½ï¿½Î»FIFO...\r\n"));
             MPU6050_Reset_FIFO();
-            //printf(("ÕıÔÚÊ¹ÄÜFIFO...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½FIFO...\r\n"));
             MPU6050_Set_FIFO_Enabled(1);
-            //printf(("ÕıÔÚÊ¹ÄÜDMP...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½DMP...\r\n"));
             MPU6050_Set_DMP_Enabled(1);
-            //printf(("¸´Î»DMPDMP...\r\n"));
+            //printf(("ï¿½ï¿½Î»DMPDMP...\r\n"));
             MPU6050_Reset_DMP();
-			      //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 3/7 ......\r\n"));
+			      //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 3/7 ......\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Write_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1], 0, 0);
-            //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 4/7 ......\r\n"));
+            //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 4/7 ......\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Write_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1], 0, 0);
-            //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 5/7 ......\r\n"));
+            //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 5/7 ......\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Write_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1], 0, 0);
-            //printf(("µÈ´ıFIFO¼ÆÊı>=2...\r\n"));
+            //printf(("ï¿½È´ï¿½FIFOï¿½ï¿½ï¿½ï¿½>=2...\r\n"));
             while ((fifoCount = MPU6050_Get_FIFO_Count()) < 3);
-            //printf(("¸´Î» FIFO...\r\n"));
+            //printf(("ï¿½ï¿½Î» FIFO...\r\n"));
             MPU6050_Get_FIFO_Bytes(fifoBuffer, min(fifoCount, 128)); // safeguard only 128 bytes
-            //printf(("¶ÁÈ¡ÖĞ¶Ï×´Ì¬...\r\n"));
+            //printf(("ï¿½ï¿½È¡ï¿½Ğ¶ï¿½×´Ì¬...\r\n"));
             MPU6050_Get_Int_Status();
-            //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 6/7 ......\r\n"));
+            //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 6/7 ......\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Read_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1]);
-            //printf(("µÈ´ıFIFO¼ÆÊı>=2...\r\n"));
+            //printf(("ï¿½È´ï¿½FIFOï¿½ï¿½ï¿½ï¿½>=2...\r\n"));
             while ((fifoCount = MPU6050_Get_FIFO_Count()) < 3);
-            //printf(("ÕıÔÚ¶ÁÈ¡FIFO...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½Ú¶ï¿½È¡FIFO...\r\n"));
             MPU6050_Get_FIFO_Bytes(fifoBuffer, min(fifoCount, 128)); // safeguard only 128 bytes
-            //printf(("ÕıÔÚ¶ÁÈ¡ÖĞ¶Ï×´Ì¬...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½Ú¶ï¿½È¡ï¿½Ğ¶ï¿½×´Ì¬...\r\n"));
             MPU6050_Get_Int_Status();
-            //printf(("Ğ´Èë×îºóÄÚ´æ¸úĞÂµ½ 7/7 ......\r\n"));
+            //printf(("Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Âµï¿½ 7/7 ......\r\n"));
             for (j = 0; j < 4 || j < dmpUpdate[2] + 3; j++, pos++) dmpUpdate[j] = dmpUpdates[pos];
             MPU6050_Write_Memory_Block(dmpUpdate + 3, dmpUpdate[2], dmpUpdate[0], dmpUpdate[1], 0, 0);
-            //printf(("DMPÉèÖÃÒ»ÇĞÕı³£...\r\n"));
+            //printf(("DMPï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...\r\n"));
 
-            //printf(("¹Ø±ÕDMPÒıÇæ...\r\n"));
+            //printf(("ï¿½Ø±ï¿½DMPï¿½ï¿½ï¿½ï¿½...\r\n"));
             MPU6050_Set_DMP_Enabled(0);
-            //printf(("ÉèÖÃÄÚ²¿42×Ö½Ú»º³å°ü...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½42ï¿½Ö½Ú»ï¿½ï¿½ï¿½ï¿½...\r\n"));
             dmpPacketSize = 42;	 
-            //printf(("×îºóÒ»´Î¸´Î»FIFOºÍÖĞ¶Ï×´Ì¬...\r\n"));
+            //printf(("ï¿½ï¿½ï¿½Ò»ï¿½Î¸ï¿½Î»FIFOï¿½ï¿½ï¿½Ğ¶ï¿½×´Ì¬...\r\n"));
             MPU6050_Reset_FIFO();
             MPU6050_Get_Int_Status();
-            //printf(("´ò¿ªDMPÒıÇæ...\r\n"));
+            //printf(("ï¿½ï¿½DMPï¿½ï¿½ï¿½ï¿½...\r\n"));
 			      MPU6050_Set_DMP_Enabled(1);
-			      //printf(("DMPÒıÇæ×¼±¸¾ÍĞ÷,µÈ´ıµÚÒ»´ÎÊı¾İÖĞ¶Ï...\r\n"));
+			      //printf(("DMPï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½È´ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½...\r\n"));
 			      MPU6050_Get_Int_Status();
 
         } else {
-            //printf(("DMPÒıÇæÅäÖÃĞ£Ñé³ö´í...\r\n"));
+            //printf(("DMPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½...\r\n"));
             return 2; // configuration block loading failed
         }
     } else {
-         //printf(("DMP´úÂëĞ£Ñé³ö´í.\r\n"));
+         //printf(("DMPï¿½ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½.\r\n"));
         return 1; // main binary block loading failed
     }
-    //printf(("======DMPÒıÇæ³õÊ¼»¯Íê³É========\r\n"));
+    //printf(("======DMPï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½========\r\n"));
     return 0; // success
 }
 
@@ -1327,7 +1327,7 @@ void DMP_Routing(void)
 
 			for(i=0 ; i < dmpPacketSize; i+=2) 
 			{
-				ptr[i]   = fifoBuffer[i+1];  //Êı¾İ´óĞ¡¶ËµÄ´¦Àí¡£
+				ptr[i]   = fifoBuffer[i+1];  //ï¿½ï¿½ï¿½İ´ï¿½Ğ¡ï¿½ËµÄ´ï¿½ï¿½ï¿½ï¿½
 				ptr[i+1] = fifoBuffer[i];
 			}
 			
@@ -1369,7 +1369,7 @@ void DMP_Routing(void)
 
 
 //static const float gyro_max = 1000;
-	//DMP_DATA.GYROx ¼´ÎªÖ±½ÓµÄ½Ç¶Èdeg
+	//DMP_DATA.GYROx ï¿½ï¿½ÎªÖ±ï¿½ÓµÄ½Ç¶ï¿½deg
 float Get_DMP_Gyro_x()
 {
 	//if(DMP_DATA.GYROx > gyro_max) DMP_DATA.GYROx = gyro_max;

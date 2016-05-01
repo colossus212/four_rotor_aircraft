@@ -21,7 +21,7 @@
 
 float TIME=0;
 float HCSR_Height = 0;
-float Height_Calibration_Factor;
+float Height_Calibration_Factor = 1;
 uint32_t width = 0;
 
 void HCSR04_Init()
@@ -45,7 +45,7 @@ void Flash_Height_Prepare()
 	delay_us(20);
 	Trig = 0;
 	//Height_Calibration_Factor = sqrt(tan(Get_Pitch() * AtR) * tan(Get_Pitch() * AtR) + tan(Get_Roll() * AtR) * tan(Get_Roll() * AtR) + 1);
-	Height_Calibration_Factor = 1 / cos(Get_Pitch() * AtR) * cos(Get_Roll() * AtR);
+	//Height_Calibration_Factor = 1 / cos(Get_Pitch() * AtR) * cos(Get_Roll() * AtR);
 }
 void Flash_Height()
 {	

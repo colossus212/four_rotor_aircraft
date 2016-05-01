@@ -15,7 +15,7 @@
 
 void delay_250_ns()
 {
-	NOP(); NOP(); //NOP(); NOP();
+	//NOP();// NOP(); //NOP(); NOP();
 	//NOP(); NOP(); //NOP(); NOP();
 }
 void delay_us(uint16_t t)

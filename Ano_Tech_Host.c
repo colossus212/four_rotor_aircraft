@@ -25,7 +25,7 @@ uint8_t NRF24L01_TXDATA[RX_PLOAD_WIDTH] = {0};
 
 uint8_t ARMED;
 
-extern float MOTO_THRESHOLD;
+//extern float MOTO_THRESHOLD;
 extern float Roll_Target, Pitch_Target, Yaw_Target, Height_Target;
 extern uint8_t Land_Flag;
 
@@ -56,8 +56,8 @@ void NRF_Send_AF(void)
 	//NRF24L01_TXDATA[4]=BYTE0(Acc_x);
 	//NRF24L01_TXDATA[5]=BYTE1(Acc_y);
 	//NRF24L01_TXDATA[6]=BYTE0(Acc_y);
-	NRF24L01_TXDATA[7]=BYTE1(Acc_z);
-	NRF24L01_TXDATA[8]=BYTE0(Acc_z);
+	//NRF24L01_TXDATA[7]=BYTE1(Acc_z);
+	//NRF24L01_TXDATA[8]=BYTE0(Acc_z);
 	
 	NRF24L01_TXDATA[9]=BYTE1(Gyro_x);
 	NRF24L01_TXDATA[10]=BYTE0(Gyro_x);
@@ -66,12 +66,12 @@ void NRF_Send_AF(void)
 	NRF24L01_TXDATA[13]=BYTE1(Gyro_z);
 	NRF24L01_TXDATA[14]=BYTE0(Gyro_z);
 	
-	NRF24L01_TXDATA[15]=BYTE1(Hx);
-	NRF24L01_TXDATA[16]=BYTE0(Hx);
-	NRF24L01_TXDATA[17]=BYTE1(Hy);
-	NRF24L01_TXDATA[18]=BYTE0(Hy);
-	NRF24L01_TXDATA[19]=BYTE1(Hz);
-	NRF24L01_TXDATA[20]=BYTE0(Hz);
+//	NRF24L01_TXDATA[15]=BYTE1(Hx);
+//	NRF24L01_TXDATA[16]=BYTE0(Hx);
+//	NRF24L01_TXDATA[17]=BYTE1(Hy);
+//	NRF24L01_TXDATA[18]=BYTE0(Hy);
+//	NRF24L01_TXDATA[19]=BYTE1(Hz);
+//	NRF24L01_TXDATA[20]=BYTE0(Hz);
 	
 	_temp = (int16_t)(Get_Roll()*100);
 	NRF24L01_TXDATA[21]=BYTE1(_temp);
@@ -89,14 +89,29 @@ void NRF_Send_AF(void)
 	NRF24L01_TXDATA[3]=BYTE1(_temp);
 	NRF24L01_TXDATA[4]=BYTE0(_temp);
 	
-	_temp = (uint16_t)(yaw_rate_PID.output);
+	_temp = (int16_t)(yaw_rate_PID.output);
 	NRF24L01_TXDATA[5]=BYTE1(_temp);
 	NRF24L01_TXDATA[6]=BYTE0(_temp);
 	
-	_temp = (uint16_t)(yaw_angle_PID.output);
+	//_temp = (int16_t)(yaw_angle_PID.output);
+	//NRF24L01_TXDATA[7]=BYTE1(_temp);
+	//NRF24L01_TXDATA[8]=BYTE0(_temp);
+	
+	_temp = (uint16_t)(TDR01);
+	NRF24L01_TXDATA[15]=BYTE1(_temp);
+	NRF24L01_TXDATA[16]=BYTE0(_temp);
+	
+	_temp = (uint16_t)(TDR02);
+	NRF24L01_TXDATA[17]=BYTE1(_temp);
+	NRF24L01_TXDATA[18]=BYTE0(_temp);
+	
+	_temp = (uint16_t)(TDR03);
+	NRF24L01_TXDATA[19]=BYTE1(_temp);
+	NRF24L01_TXDATA[20]=BYTE0(_temp);
+	
+	_temp = (uint16_t)(TDR04);
 	NRF24L01_TXDATA[7]=BYTE1(_temp);
 	NRF24L01_TXDATA[8]=BYTE0(_temp);
-	
 	
 	if(ARMED==0)			NRF24L01_TXDATA[27]=0xA0;
 	else if(ARMED==1)		NRF24L01_TXDATA[27]=0xA1;
@@ -188,48 +203,48 @@ void NRF_Send_PID(void)
 	NRF24L01_TXDATA[2]=0x1C;
 	NRF24L01_TXDATA[3]=0xAD;
 	
-	//_temp = (uint16_t)(Get_PID_Roll_Rate_Kp() * 100);
-	_temp = (uint16_t)(Get_PID_Roll_Angle_Kp() * 100);
+	_temp = (uint16_t)(Get_PID_Roll_Rate_Kp() * 100);
+	//_temp = (uint16_t)(Get_PID_Roll_Angle_Kp() * 100);
 	//_temp = (uint16_t)(Get_PID_alt_Kp() * 100);	
 	NRF24L01_TXDATA[4]=BYTE1(_temp);
 	NRF24L01_TXDATA[5]=BYTE0(_temp);
-	//_temp = (uint16_t)(Get_PID_Roll_Rate_Ki() * 100);
-	_temp = (uint16_t)(Get_PID_Roll_Angle_Ki() * 100);
+	_temp = (uint16_t)(Get_PID_Roll_Rate_Ki() * 100);
+	//_temp = (uint16_t)(Get_PID_Roll_Angle_Ki() * 100);
 	//_temp = (uint16_t)(Get_PID_alt_Ki() * 100);	
 	NRF24L01_TXDATA[6]=BYTE1(_temp);
 	NRF24L01_TXDATA[7]=BYTE0(_temp);
-	//_temp = (uint16_t)(Get_PID_Roll_Rate_Kd() * 100);
-	_temp = (uint16_t)(Get_PID_Roll_Angle_Kd() * 100);
+	_temp = (uint16_t)(Get_PID_Roll_Rate_Kd() * 100);
+	//_temp = (uint16_t)(Get_PID_Roll_Angle_Kd() * 100);
 	//_temp = (uint16_t)(Get_PID_alt_Kd() * 100);	
 	NRF24L01_TXDATA[8]=BYTE1(_temp);
 	NRF24L01_TXDATA[9]=BYTE0(_temp);
 	
-	//_temp = (uint16_t)(Get_PID_Pitch_Rate_Kp() * 100);
-	_temp = (uint16_t)(Get_PID_Pitch_Angle_Kp() * 100);
+	_temp = (uint16_t)(Get_PID_Pitch_Rate_Kp() * 100);
+	//_temp = (uint16_t)(Get_PID_Pitch_Angle_Kp() * 100);
 	//_temp = (uint16_t)(Get_PID_Yaw_Angle_Kp() * 100);
 	NRF24L01_TXDATA[10]=BYTE1(_temp);
 	NRF24L01_TXDATA[11]=BYTE0(_temp);
-	//_temp = (uint16_t)(Get_PID_Pitch_Rate_Ki() * 100);
-	_temp = (uint16_t)(Get_PID_Pitch_Angle_Ki() * 100);
+	_temp = (uint16_t)(Get_PID_Pitch_Rate_Ki() * 100);
+	//_temp = (uint16_t)(Get_PID_Pitch_Angle_Ki() * 100);
 	//_temp = (uint16_t)(Get_PID_Yaw_Angle_Ki() * 100);
 	NRF24L01_TXDATA[12]=BYTE1(_temp);
 	NRF24L01_TXDATA[13]=BYTE0(_temp);
-	//_temp = (uint16_t)(Get_PID_Pitch_Rate_Kd() * 100);
-	_temp = (uint16_t)(Get_PID_Pitch_Angle_Kd() * 100);
+	_temp = (uint16_t)(Get_PID_Pitch_Rate_Kd() * 100);
+	//_temp = (uint16_t)(Get_PID_Pitch_Angle_Kd() * 100);
 	//_temp = (uint16_t)(Get_PID_Yaw_Angle_Kd() * 100);
 	NRF24L01_TXDATA[14]=BYTE1(_temp);
 	NRF24L01_TXDATA[15]=BYTE0(_temp);
 	
-	//_temp = (uint16_t)(Get_PID_Yaw_Rate_Kp() * 100);
-	_temp = (uint16_t)(Get_PID_Yaw_Angle_Kp() * 100);
+	_temp = (uint16_t)(Get_PID_Yaw_Rate_Kp() * 10);
+	//_temp = (uint16_t)(Get_PID_Yaw_Angle_Kp() * 100);
 	NRF24L01_TXDATA[16]=BYTE1(_temp);
 	NRF24L01_TXDATA[17]=BYTE0(_temp);
-	//_temp = (uint16_t)(Get_PID_Yaw_Rate_Ki() * 100);
-	_temp = (uint16_t)(Get_PID_Yaw_Angle_Ki() * 100);
+	_temp = (uint16_t)(Get_PID_Yaw_Rate_Ki() * 10);
+	//_temp = (uint16_t)(Get_PID_Yaw_Angle_Ki() * 100);
 	NRF24L01_TXDATA[18]=BYTE1(_temp);
 	NRF24L01_TXDATA[19]=BYTE0(_temp);
-	//_temp = (uint16_t)(Get_PID_Yaw_Rate_Kd() * 100);
-	_temp = (uint16_t)(Get_PID_Yaw_Angle_Kd() * 100);
+	_temp = (uint16_t)(Get_PID_Yaw_Rate_Kd() * 10);
+	//_temp = (uint16_t)(Get_PID_Yaw_Angle_Kd() * 100);
 	NRF24L01_TXDATA[20]=BYTE1(_temp);
 	NRF24L01_TXDATA[21]=BYTE0(_temp);
 	
@@ -345,6 +360,7 @@ uint8_t NRF_DataAnl(void)
 		{
 			ARMED = 0;
 			NRF_Send_ARMED();
+			Control_Fly_Flag_Off();
 			return 1;
 		}
 		if(NRF24L01_RXDATA[3]==0xA1)	
@@ -369,18 +385,18 @@ uint8_t NRF_DataAnl(void)
 			PID_PIT_I = ((float)((uint16_t)(NRF24L01_RXDATA[12]<<8)|NRF24L01_RXDATA[13])) / 100;
 			PID_PIT_D = ((float)((uint16_t)(NRF24L01_RXDATA[14]<<8)|NRF24L01_RXDATA[15])) / 100;
 			
-			PID_YAW_P = ((float)((uint16_t)(NRF24L01_RXDATA[16]<<8)|NRF24L01_RXDATA[17])) / 100;
-			PID_YAW_I = ((float)((uint16_t)(NRF24L01_RXDATA[18]<<8)|NRF24L01_RXDATA[19])) / 100;
-			PID_YAW_D = ((float)((uint16_t)(NRF24L01_RXDATA[20]<<8)|NRF24L01_RXDATA[21])) / 100;
+			PID_YAW_P = ((float)((uint16_t)(NRF24L01_RXDATA[16]<<8)|NRF24L01_RXDATA[17])) / 10;
+			PID_YAW_I = ((float)((uint16_t)(NRF24L01_RXDATA[18]<<8)|NRF24L01_RXDATA[19])) / 10;
+			PID_YAW_D = ((float)((uint16_t)(NRF24L01_RXDATA[20]<<8)|NRF24L01_RXDATA[21])) / 10;
 			
-//			PID_Parameter_Load_Rate(PID_ROL_P, PID_ROL_I, PID_ROL_D,
-//						PID_PIT_P, PID_PIT_I, PID_PIT_D,
-//						PID_YAW_P, PID_YAW_I, PID_YAW_D);
-
-			
-			PID_Parameter_Load_Angle(PID_ROL_P, PID_ROL_I, PID_ROL_D,
+			PID_Parameter_Load_Rate(PID_ROL_P, PID_ROL_I, PID_ROL_D,
 						PID_PIT_P, PID_PIT_I, PID_PIT_D,
 						PID_YAW_P, PID_YAW_I, PID_YAW_D);
+
+			
+//			PID_Parameter_Load_Angle(PID_ROL_P, PID_ROL_I, PID_ROL_D,
+//						PID_PIT_P, PID_PIT_I, PID_PIT_D,
+//						PID_YAW_P, PID_YAW_I, PID_YAW_D);
 
 //			PID_Parameter_Load_Height(PID_ROL_P, PID_ROL_I, PID_ROL_D,
 //						PID_PIT_P, PID_PIT_I, PID_PIT_D,

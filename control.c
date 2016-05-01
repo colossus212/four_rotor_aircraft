@@ -1,85 +1,24 @@
 /******************** (C) COPYRIGHT 2014 Air Nano Team ***************************
- * 文件名  ：control.c
+* File Name	: control.c
  * Version	: 2015.7.10 By DHP
  * Device(s)	: R5F100LE
  * Tool-Chain	: CA78K0R
- * description  ：control Posture and Heigh
- * function：  void Control_Posture(float roll, float pitch, float yaw);
-		  void Control_Heigh(float H);
+ * description	: control Posture and Heigh
+ * function		: void Control_Posture(float roll, float pitch, float yaw);
+		  		  void Control_Heigh(float H);
 *********************************************************************************/
 
 #include "include.h"
 #include  <math.h>
 
-#define MOTO_MAX 35000
-#define MOTO_MIN 20000
-		//6000
-
-#if 0
-//r_cg_timer_user.c中 __interrupt static void r_tau0_channel5_interrupt(void)的备份
-	//中断控制：
-//if(Count_for_Timer_8 == 8)
-//	{
-//		Count_for_Timer_8 = 0;
-////		Flash_Height();
-////		Control_Heigh(Height_Target); // Initialization value is 100 (cm)
-//
-//		//Control_Track();
-//	}
-//	
-////	if(Count_for_Timer_8 == 6)
-////	{
-////		;
-////	}
-////	if(Count_for_Timer_8 == 5)
-////	{
-////		;
-////	}
-////	if(Count_for_Timer_8 == 4)
-////	{
-////		GY953_Get_Mag();
-////	}	
-////	if(Count_for_Timer_8 == 3)
-////	{
-////		GY953_Get_Gyro();
-////	}
-////	
-////	if(Count_for_Timer_8 == 2)
-////	{
-////		GY953_Get_Accl();
-////	}
-////	
-////	if(Count_for_Timer_8 == 1)
-////	{
-////		GY953_Get_RPY();
-////	}	
-//
-//	if(Count_for_Timer_8 == 0)
-//	{
-////		Flash_Height_Prepare();
-//	}
-//	
-//	//Get_Attitude();  // haven't use DMP
-//	
-//	Get_Attitude_DMP();
-//
-////	height = Get_Height();
-//
-//	Control_Posture(Roll_Target, Pitch_Target, Yaw_Target);
-//
-//	Count_for_Timer_8++;
-//	
-//     //P13.0 = ~P13.0;
-#endif
-
-
-
+#define MOTO_MAX 40000
+#define MOTO_MIN 0
 
 
 uint8_t Fly_flag;
 uint8_t Land_Flag = 0;
 volatile float MOTO1 = 0, MOTO2 = 0, MOTO3 = 0, MOTO4 = 0;
-float MOTO_THRESHOLD = 0;
+float MOTO_THRESHOLD1 = 0, MOTO_THRESHOLD2 = 0, MOTO_THRESHOLD3 = 0, MOTO_THRESHOLD4 = 0;
 float Roll_Target = 0, Pitch_Target = 0, Yaw_Target = 0, Height_Target = 100;
 
 
@@ -89,10 +28,10 @@ float Roll_Target = 0, Pitch_Target = 0, Yaw_Target = 0, Height_Target = 100;
 *******************************************************************************/
  void MOTO_Limiter()
  {
-	 	if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX - 1;
-		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX - 1;
-		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX - 1;
-		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX - 1;
+	 	if(MOTO1 > MOTO_MAX) MOTO1 = MOTO_MAX;
+		if(MOTO2 > MOTO_MAX) MOTO2 = MOTO_MAX;
+		if(MOTO3 > MOTO_MAX) MOTO3 = MOTO_MAX;
+		if(MOTO4 > MOTO_MAX) MOTO4 = MOTO_MAX;
 
 		if(MOTO1 <= MOTO_MIN) MOTO1 = MOTO_MIN;
 		if(MOTO2 <= MOTO_MIN) MOTO2 = MOTO_MIN;
@@ -100,10 +39,7 @@ float Roll_Target = 0, Pitch_Target = 0, Yaw_Target = 0, Height_Target = 100;
 		if(MOTO4 <= MOTO_MIN) MOTO4 = MOTO_MIN;
  }
 
-/****************************************姿态控制********************************************/
-
-/*备注：串级PID 控制   外环（角度环）采用PID调节   */
-/*                     内环（角速度环）采用PD调节  */
+/************************************************************************************/
 
 void Control_Posture(float roll, float pitch, float yaw)
 {
@@ -111,26 +47,26 @@ void Control_Posture(float roll, float pitch, float yaw)
 	static int i = 0;
 	if(i >= 2)
 	{
-		PID_Position( & pitch_angle_PID, pitch, Get_Pitch());	//俯仰计算//
-		PID_Position( & roll_angle_PID, roll, Get_Roll());	//横滚计算//
-		PID_Position( & yaw_angle_PID, yaw, Get_Yaw());		//航向计算//
+		PID_Position( & pitch_angle_PID, pitch, Get_Pitch());	////
+		PID_Position( & roll_angle_PID, roll, Get_Roll());	////
+		PID_Position( & yaw_angle_PID, yaw, Get_Yaw());		////
 		i = 0;
 	}
 	i ++;
-		//************内环(角速度环)PD***************//	
-	PID_Position( & pitch_rate_PID, pitch_angle_PID.output, Get_DMP_Gyro_x());	//俯仰计算//
-	PID_Position( & roll_rate_PID, roll_angle_PID.output, Get_DMP_Gyro_y());	//横滚计算//
-	PID_Position( & yaw_rate_PID, yaw_angle_PID.output, - Get_DMP_Gyro_z());	//航向计算//
+		//************()PD***************//	
+	PID_Position( & pitch_rate_PID, pitch_angle_PID.output, Get_DMP_Gyro_x());	////
+	PID_Position( & roll_rate_PID, roll_angle_PID.output, Get_DMP_Gyro_y());	////
+	PID_Position( & yaw_rate_PID, yaw_angle_PID.output, - Get_DMP_Gyro_z());	////
 		//if don't use DMP
-	//PID_Position( & pitch_rate_PID, pitch_angle_PID.output, Get_MPU6050_Gx());	//俯仰计算//
-	//PID_Position( & roll_rate_PID, roll_angle_PID.output, Get_MPU6050_Gy());	//横滚计算//
-	//PID_Position( & yaw_rate_PID, yaw_angle_PID.output, - Get_MPU6050_Gz());	//航向计算//
+	//PID_Position( & pitch_rate_PID, pitch_angle_PID.output, Get_MPU6050_Gx());	////
+	//PID_Position( & roll_rate_PID, roll_angle_PID.output, Get_MPU6050_Gy());	////
+	//PID_Position( & yaw_rate_PID, yaw_angle_PID.output, - Get_MPU6050_Gz());	////
 
 
-	/********************************油门控制******************************************/
-		/*		控制采用X模式		*/
+	/**************************************************************************/
+		/*		X MODE		*/
 		/*						*/	
-		/*          1 机头 4 		 */
+		/*          1 head 4 		 */
 		/*            \   / 		 */ 
 		/*             \ /  		 */
 		/*             / \                */
@@ -139,10 +75,10 @@ void Control_Posture(float roll, float pitch, float yaw)
 		/* 1: MOTO1			 2: MOTO1	  */
 		/* 3: MOTO3			 4: MOTO4	  */	
 		
-		MOTO1 = MOTO_THRESHOLD - pitch_rate_PID.output - roll_rate_PID.output + yaw_rate_PID.output + alt_PID.output;
-		MOTO2 = MOTO_THRESHOLD + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output + alt_PID.output;
-		MOTO3 = MOTO_THRESHOLD + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output + alt_PID.output;
-		MOTO4 = MOTO_THRESHOLD - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output + alt_PID.output;
+		MOTO1 = MOTO_THRESHOLD1 - pitch_rate_PID.output - roll_rate_PID.output + yaw_rate_PID.output + alt_PID.output;
+		MOTO2 = MOTO_THRESHOLD2 + pitch_rate_PID.output - roll_rate_PID.output - yaw_rate_PID.output + alt_PID.output;
+		MOTO3 = MOTO_THRESHOLD3 + pitch_rate_PID.output + roll_rate_PID.output + yaw_rate_PID.output + alt_PID.output;
+		MOTO4 = MOTO_THRESHOLD4 - pitch_rate_PID.output + roll_rate_PID.output - yaw_rate_PID.output + alt_PID.output;
 		
 	MOTO_Limiter();
 
@@ -151,13 +87,13 @@ void Control_Posture(float roll, float pitch, float yaw)
 }
 
 
-/*************************************高度控制********************************************/
+/***************************************************************************/
 
-void Control_Heigh(float H)		//期望值,单位cm
+void Control_Heigh(float H)		
 {
 	PID_Incremental( & alt_PID, H, Get_Height());	
 	
-		//油门控制
+
 //	MOTO1 +=  alt_PID.output;
 //	MOTO2 +=  alt_PID.output;
 //	MOTO3 +=  alt_PID.output;
@@ -183,18 +119,22 @@ void Control_Fly_Flag_On()
 	Fly_flag = 1;
 }
 
-void Control_Track()
+void Control_Track_Frame()
 {
-	Control_Posture(0, 0, Track());
-	//Height_Target = 120;
+	Yaw_Target = Track_Frame();
+}
+
+void Control_Track_Motion()
+{
+	Track_Motion();
 }
 
 void Control_Fly()
 {
 	R_TAU0_Channel5_Start();
 	delay_ms(100);
-	MOTO_THRESHOLD = 27500; //27500;
-	Motor_RateFlash(MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD);
+	MOTO_THRESHOLD1 = 17000, MOTO_THRESHOLD2 = 19000, MOTO_THRESHOLD3 = 17000, MOTO_THRESHOLD4 = 17000; //27500;
+	Motor_RateFlash(MOTO_THRESHOLD1, MOTO_THRESHOLD2, MOTO_THRESHOLD3, MOTO_THRESHOLD4);
 	//delay_ms(100);
 	delay_ms(10);	
 	Control_Fly_Flag_On();			
@@ -202,8 +142,8 @@ void Control_Fly()
 
 void Control_Test()
 {
-	MOTO_THRESHOLD = 7500;
-	Motor_RateFlash(MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD, MOTO_THRESHOLD);
+	MOTO_THRESHOLD1 = 7500, MOTO_THRESHOLD2 = 8500, MOTO_THRESHOLD3 = 7500, MOTO_THRESHOLD4 = 7500; //27500;
+	Motor_RateFlash(MOTO_THRESHOLD1, MOTO_THRESHOLD2, MOTO_THRESHOLD3, MOTO_THRESHOLD4);
 }
 
 void Control_Land()
@@ -228,8 +168,8 @@ void Control_Land()
 void Control_Free_Land()
 {
 	R_TAU0_Channel5_Stop();
-	MOTO_THRESHOLD = 0;
+	MOTO_THRESHOLD1 = 0, MOTO_THRESHOLD2 = 0, MOTO_THRESHOLD3 = 0, MOTO_THRESHOLD4 = 0;
 	Motor_RateFlash(0, 0, 0, 0);
 	MOTO1 = 0; MOTO2 = 0; MOTO3 = 0; MOTO4 = 0;
-	TDR01 = 2000; TDR02 = 2000; TDR03 = 2000; TDR04 = 2000;
+	//TDR01 = 4000; TDR02 = 4000; TDR03 = 4000; TDR04 = 4000;
 }

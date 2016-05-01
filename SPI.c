@@ -133,10 +133,12 @@ uint8_t SPI_Receive_Byte()  // need 2 * 8 = 16 us
 	{
 		SPI_SCLK = 0U;
 		//delay_us(1);		
-		delay_250_ns();
+		//delay_250_ns();
+		NOP(); NOP(); NOP();// NOP();//NOP();
 		SPI_SCLK = 1U;
 		//delay_us(1);		
-		delay_250_ns();
+		//delay_250_ns();
+		NOP();// NOP();// NOP();// NOP();//NOP();
 		receive <<= 1; 
 		if(SPI_MISO) receive++;
 			////delay_us(1);

@@ -10,8 +10,7 @@
 		  void ADNS3080_SROM_Download();
 		  void ADNS3080_Frame_Capture();
 		  uint8_t Get_Frame_Data(uint8_t count);
-		  uint8_t Get_Frame_Data_Matrix(uint8_t i, uint8_t j);
-		  
+		  uint8_t Get_Frame_Data_Matrix(uint8_t i, uint8_t j);		  
 		  
 		  #define SPI_SCLK P5.2  // pin 35
 		  #define SPI_MOSI P5.4  // pin 37
@@ -29,7 +28,7 @@
 #define ADNS3080_RST P6.1  // pin 18
 
 uint8_t Data_Out_Upper, Data_Out_Lower;
-uint8_t Motion, Delta_X, Delta_Y, SQUAL, Shutter_Upper, Shutter_Lower, Maximum_Pixel;
+uint8_t Motion, Delta_X, Delta_Y;//, SQUAL, Shutter_Upper, Shutter_Lower, Maximum_Pixel;
 uint16_t Frame_Period = 0;
 /******************************************************************************
 * function :		void ADNS3080_Read_Frame_Period()
@@ -104,10 +103,35 @@ uint8_t ADNS3080_Product_ID;
 *******************************************************************************/ 
 void ADNS3080_Init()
 {
-	
+	uint8_t Extended_Config = 0;
 	ADNS3080_Power_High();
 	//ADNS3080_Reset_High();
 	ADNS3080_Product_ID = SPI_Read_Byte(ADNS3080_RA_Product_ID);
+	
+		//bit 4 as RES Resolution in counts per inch  0 = 400  1 = 1600
+	SPI_Write_Byte(ADNS3080_RA_Configuration_bits, 0x10);
+	delay_ms(3);
+	
+		//bit 0 as Fixed_FR Fixed frame rate (disable automatic frame rate control).  
+		//When this bit is set, the frame rate will be determined by 
+		//the value in the Frame_Period_Max_Bound registers.
+		//0 = automatic frame rate
+		//1 = fixed frame rate
+	SPI_Write_Byte(ADNS3080_RA_Extended_Config, 0x01);
+	delay_ms(3);
+	
+	Extended_Config = SPI_Read_Byte(ADNS3080_RA_Extended_Config);
+	if((Extended_Config & 0x80) == 0x00)
+	{
+		Extended_Config = SPI_Read_Byte(ADNS3080_RA_Extended_Config);
+			// Frame Rate = Clock Frequency / Register value
+			//  3000				1f 40
+			//  5000				12 C0
+		SPI_Write_Byte(ADNS3080_RA_Frame_Period_Max_Bound_Lower, 0xC0);
+		SPI_Write_Byte(ADNS3080_RA_Frame_Period_Max_Bound_Upper, 0x12);	
+	}
+	delay_ms(10);
+	
 	ADNS3080_Read_Frame_Period();
 	//Motion = SPI_Read_Byte(ADNS3080_RA_Motion_Burst); // test
 }
@@ -137,16 +161,19 @@ void ADNS3080_Reset()
 
 void ADNS3080_Motion_Read()
 {
-	uint8_t data[7];
+	uint8_t data[7] = {0};
 	SPI_Burst_Mode_Read(ADNS3080_RA_Motion_Burst, 7, data);
 	Motion = data[0];
-	Delta_X = data[1];
-	Delta_Y = data[2];
-		// Number of features = SQUAL register value * 4
-	SQUAL = data[3];
-	Shutter_Upper = data[4];
-	Shutter_Lower = data[5];
-	Maximum_Pixel = data[6];
+	if((Motion & 0x80) == 0x80)
+	{
+		Delta_X = data[1];
+		Delta_Y = data[2];
+			// Number of features = SQUAL register value * 4
+		//SQUAL = data[3];
+		//Shutter_Upper = data[4];
+		//Shutter_Lower = data[5];
+		//Maximum_Pixel = data[6];
+	}
 }
 
 /******************************************************************************
@@ -322,7 +349,7 @@ void ADNS3080_SROM_Download()
 		// the result is placed in the Data_Out register.
 	Data_Out_Lower = SPI_Read_Byte(ADNS3080_RA_Data_Out_Lower);
 	Data_Out_Upper = SPI_Read_Byte(ADNS3080_RA_Data_Out_Upper);
-	if(Data_Out_Lower == 0xef && Data_Out_Upper == 0xbe) SROM_CRC_Correct = 1;
+	if((Data_Out_Lower == 0xef) && (Data_Out_Upper == 0xbe)) SROM_CRC_Correct = 1;
 }
 
 

@@ -7,6 +7,7 @@
 
 //void Edge_Detection();
 void Track_Init();
-float Track();  // return the Target of Yaw
+float Track_Frame();  // return the Target of Yaw
+float Track_Motion();
 
 #endif
